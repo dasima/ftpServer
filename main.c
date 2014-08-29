@@ -15,6 +15,8 @@ int main(int argc, const char *argv[])
     int listenfd = tcp_server(NULL, 9981);
 
     pid_t pid;
+    session_t ses;
+    session_init(&ses);
     while(1)
     {
         int peerfd = accept_timeout(listenfd, NULL, 10);
@@ -28,10 +30,15 @@ int main(int argc, const char *argv[])
         else if(pid == 0)
         {
             close(listenfd);
+            for(;;)
+                pause();
+            ses.peerfd = peerfd;
+            session_begin(&ses);
         }
         else
         {
             close(peerfd);
+
         }
     }
 
