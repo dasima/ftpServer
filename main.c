@@ -1,4 +1,5 @@
 #include "sysutil.h"
+#include "session.h"
 
 int main(int argc, const char *argv[])
 {

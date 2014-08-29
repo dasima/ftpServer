@@ -1,6 +1,9 @@
 #include "session.h"
+#include "common.h"
+#include "ftp_proto.h"
+#include "ftp_nobody.h"
 
-void session_init(sesson_t *ses)
+void session_init(session_t *ses)
 {
     memset(ses->command, 0, sizeof(ses->command));
     memset(ses->com, 0, sizeof(ses->com));

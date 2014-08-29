@@ -1,4 +1,6 @@
 #include "ftp_nobody.h"
+#include "common.h"
+#include "sysutil.h"
 
 void set_nobody();
 
@@ -11,7 +13,7 @@ void handle_nobody(session_t *ses)
     char cmd;
     while(1)
     {
-        int ret =readn(ses->nobody_fd, &cmd, sizeof(cms));
+        int ret =readn(ses->nobody_fd, &cmd, sizeof(cmd));
         if(ret == -1)
         {
             if(errno == EINTR)
@@ -29,7 +31,7 @@ void set_nobody()
     //1. 首先获取nobody的uid、gid
     //2. 然后逐项进行设置
     struct passwd *pw;
-    if((pw == getpwnam("nobody")) == NULL)
+    if((pw = getpwnam("nobody")) == NULL)
         ERR_EXIT("getpwnam");
 
     if(setegid(pw->pw_gid) == -1)
