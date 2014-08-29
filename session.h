@@ -6,9 +6,9 @@
  */
 typedef struct 
 {
-    char command[1024];//client发来的FTP指令
-    char com[1024];//FTP指令
-    char args[1024];//FTP指令的参数
+    char command[MAX_COMMAND];//client发来的FTP指令
+    char com[MAX_COMMAND];//FTP指令
+    char args[MAX_COMMAND];//FTP指令的参数
 
     int peerfd;//客户连接的fd
 
