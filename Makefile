@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS=-Wall -g
 BIN=ftpServer
-OBJS=sysutil.o main.o session.o strutil.o ftp_nobody.o ftp_proto.o
+OBJS=sysutil.o main.o session.o strutil.o ftp_nobody.o ftp_proto.o configure.o parse_conf.o 
 #OTHER=-std=c++0x
 #LINKS=-lecho -lpthread
 $(BIN):$(OBJS)
