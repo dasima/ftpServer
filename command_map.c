@@ -2,7 +2,7 @@
 #include "common.h"
 #include "sysutil.h"
 #include "ftp_codes.h"
-
+#include "configure.h"
 
 typedef struct ftpcmd
 {
@@ -96,6 +96,13 @@ void ftp_reply(session_t *ses, int status, const char *text)
     writen(ses->peerfd, tmp, strlen(tmp));
 }
 
+void ftp_lreply(session_t *ses, int status, const char *text)
+{
+    char tmp[1024] = { 0 };
+    snprintf(tmp, sizeof tmp, "%d %s\r\n", status, text);
+    writen(ses->peerfd, tmp, strlen(tmp));
+}
+
 void do_user(session_t *ses)
 {
     struct passwd *pw;
@@ -140,6 +147,12 @@ void do_pass(session_t *ses)
     if(seteuid(pw->pw_uid) == -1)
         ERR_EXIT("seteuid");
 
+    //home---切换到住目录home
+    if(chdir(pw->pw_dir) == -1)
+        ERR_EXIT("chdir");
+    //umask
+    umask(tunable_local_umask);
+
     ftp_reply(ses, FTP_LOGINOK, "Login successful.");
 }
 
@@ -171,7 +184,20 @@ void do_pasv(session_t *ses)
 
 void do_type(session_t *ses)
 {
-
+    if(strcmp(ses->args, "A") == 0)
+    {
+        ses->ascii_mode = 1;
+        ftp_reply(ses, FTP_TYPEOK, "Switching to ASCII mode.");
+    }
+    else if(strcmp(ses->args, "I") == 0)
+    {
+        ses->ascii_mode = 0;
+        ftp_reply(ses, FTP_TYPEOK, "Switching to Binary mode.");
+    }
+    else
+    {
+        ftp_reply(ses, FTP_BADCMD, "Unrecognised TYPE command.");
+    }
 }
 
 void do_stru(session_t *ses)
@@ -221,6 +247,16 @@ void do_abor(session_t *ses)
 
 void do_pwd(session_t *ses)
 {
+    char tmp[1024] = {0};
+    if(getcwd(tmp, sizeof tmp) == NULL)
+    {
+        fprintf(stderr, "get cwd error\n");
+        ftp_reply(ses, FTP_BADMODE, "error");
+        return;
+    }
+    char text[1024] = {0};
+    snprintf(text, sizeof text, "\"%s\"", tmp);
+    ftp_reply(ses, FTP_PWDOK, text);
 
 }
 
@@ -256,12 +292,26 @@ void do_site(session_t *ses)
 
 void do_syst(session_t *ses)
 {
-
+    ftp_reply(ses, FTP_SYSTOK, "UNIX Type: L8");
 }
 
 void do_feat(session_t *ses)
 {
+    //211-Features:
+    ftp_lreply(ses, FTP_FEAT, "Features:");
 
+    //EPRT
+    writen(ses->peerfd, " EPRT\r\n", strlen(" EPRT\r\n"));
+    writen(ses->peerfd, " EPSV\r\n", strlen(" EPSV\r\n"));
+    writen(ses->peerfd, " MDTM\r\n", strlen(" MDTM\r\n"));
+    writen(ses->peerfd, " PASV\r\n", strlen(" PASV\r\n"));
+    writen(ses->peerfd, " REST STREAM\r\n", strlen(" REST STREAM\r\n"));
+    writen(ses->peerfd, " SIZE\r\n", strlen(" SIZE\r\n"));
+    writen(ses->peerfd, " TVFS\r\n", strlen(" TVFS\r\n"));
+    writen(ses->peerfd, " UTF8\r\n", strlen(" UTF8\r\n"));
+
+    //211 End
+    ftp_reply(ses, FTP_FEAT, "End");
 }
 
 void do_size(session_t *ses)

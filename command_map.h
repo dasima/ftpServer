@@ -6,7 +6,8 @@
 //命令映射相关函数
 
 void do_command_map(session_t *);
-void ftp_reply(session_t *, int status, const char *text);
+void ftp_reply(session_t *, int, const char *);
+void ftp_lreply(session_t *, int, const char *);
 
 void do_user(session_t *);
 void do_pass(session_t *);

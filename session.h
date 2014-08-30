@@ -17,7 +17,9 @@ typedef struct
     int nobody_fd;//nobody进程所使用的fd
     int proto_fd;//proto进程所使用的fd
 
-    uid_t user_uid; // 用户id
+    uid_t user_uid; // 用户uid
+
+    int ascii_mode; //是否为ascii传输模式
 }session_t;
 
 //初始化session
