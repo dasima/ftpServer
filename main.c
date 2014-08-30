@@ -4,6 +4,7 @@
 #include "configure.h"
 
 void print_conf();
+
 int main(int argc, const char *argv[])
 {
     if(getuid())
