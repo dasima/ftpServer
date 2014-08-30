@@ -19,13 +19,12 @@
 #include <ctype.h>
 #include <sys/time.h>
 #include <shadow.h>
+#include <crypt.h>
 
 #define ERR_EXIT(m) \
     do { \
         perror(m);\
         exit(EXIT_FAILURE);\
     }while(0)
-
-char *crypt(const char*, const char *);
 
 #endif  /*_COMMON_H_*/

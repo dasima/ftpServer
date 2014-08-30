@@ -41,6 +41,9 @@ int main(int argc, const char *argv[])
 
             ses.peerfd = peerfd;
             session_begin(&ses);
+
+            //这里保证每次成功执行后退出循环
+            exit(EXIT_SUCCESS);
         }
         else
         {
