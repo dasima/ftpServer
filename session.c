@@ -16,6 +16,7 @@ void session_init(session_t *ses)
 void session_begin(session_t *ses)
 {
     int fds[2];
+    //socketpair--
     if(socketpair(PF_UNIX, SOCK_STREAM, 0, fds) == -1)
         ERR_EXIT("socketpair");
 

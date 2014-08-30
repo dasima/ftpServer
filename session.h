@@ -1,5 +1,7 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
+#include "common.h"
+#define MAX_COMMAND 1024
 
 /*
  *核心模块
@@ -14,6 +16,8 @@ typedef struct
 
     int nobody_fd;//nobody进程所使用的fd
     int proto_fd;//proto进程所使用的fd
+
+    uid_t user_uid; // 用户id
 }session_t;
 
 //初始化session

@@ -3,15 +3,22 @@
 #include "strutil.h"
 #include "configure.h"
 
+/*
+ * parseconf_load_setting()函数只是
+ * 由parseconf_load_file()函数调用，
+ * 并不希望让用户调用，
+ * 所以这里parseconf_load_settting()
+ * 函数的声明和实现都在源文件中
+ */
 void parseconf_load_setting(const char *setting);
 
 //bool类型的配置变量
+//这种struct a b;的形式值得借鉴
 static struct parseconf_bool_setting
 {
     const char *p_setting_name;
     int *p_variable;
 }
-
 parseconf_bool_array[] =
 {
     { "pasv_enable", &tunable_pasv_enable },
@@ -24,7 +31,6 @@ static struct parseconf_uint_setting
     const char *p_setting_name;
     unsigned int *p_variable;
 }
-
 parseconf_uint_array[] =
 {
     { "listen_port", &tunable_listen_port },
@@ -45,13 +51,13 @@ static struct parseconf_str_setting
     const char *p_setting_name;
     const char **p_variable;
 }
-
 parseconf_str_array[] =
 {
     { "listen_address", &tunable_listen_address },
     { NULL, NULL }
 };
 
+//parseconf_load_file()
 void parseconf_load_file(const char *path)
 {
     FILE *fp = fopen(path, "r");
@@ -78,7 +84,7 @@ void parseconf_load_setting(const char *setting)
 {
     // 去除左空格
     while (isspace(*setting))
-        setting++;
+        ++setting;
 
     char key[128] ={0};
     char value[128] = {0};
@@ -104,7 +110,7 @@ void parseconf_load_setting(const char *setting)
                 return;
             }
 
-            p_str_setting++;
+            ++p_str_setting;
         }
     }
 
@@ -132,7 +138,7 @@ void parseconf_load_setting(const char *setting)
                 return;
             }
 
-            p_bool_setting++;
+            ++p_bool_setting;
         }
     }
 
@@ -150,7 +156,7 @@ void parseconf_load_setting(const char *setting)
                 return;
             }
 
-            p_uint_setting++;
+            ++p_uint_setting;
         }
     }
 }

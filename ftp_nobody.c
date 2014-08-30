@@ -34,6 +34,7 @@ void set_nobody()
     if((pw = getpwnam("nobody")) == NULL)
         ERR_EXIT("getpwnam");
 
+    //先获取gid
     if(setegid(pw->pw_gid) == -1)
         ERR_EXIT("setegid");
 

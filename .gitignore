@@ -1,4 +1,5 @@
 *.o
 ftpServer
 a.out
+.*.swp
 

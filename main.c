@@ -6,27 +6,26 @@
 void print_conf();
 int main(int argc, const char *argv[])
 {
-    //main函数中getuid为0
-    //uid_t ret;
-    //if(ret = getuid())
     if(getuid())
     {
+        //服务器端运行时没有权限给出提示信息
         fprintf(stderr, "FtpServer must be started by root!\n");
         exit(EXIT_FAILURE);
     }
-    //printf("%d\n", ret);
 
     parseconf_load_file("ftpserver.conf");
     print_conf();
 
     //创建一个监听
     int listenfd = tcp_server(tunable_listen_address, tunable_listen_port);
+    //int listenfd = tcp_server(NULL, 9981);
 
     pid_t pid;
     session_t ses;
     session_init(&ses);
     while(1)
     {
+        //int peerfd = accept_timeout(listenfd, NULL, 10);
         int peerfd = accept_timeout(listenfd, NULL, tunable_accept_timeout);
         if(peerfd == -1 && errno == ETIMEDOUT)
             continue;
