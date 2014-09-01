@@ -17,6 +17,7 @@ void session_init(session_t *ses)
 
     ses->p_addr = NULL;
     ses->data_fd = -1;
+    ses->listen_fd = -1;
 }
 
 void session_begin(session_t *ses)

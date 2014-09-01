@@ -13,9 +13,9 @@ static const char *statbuf_get_user_info(struct stat *);
 static const char *statbuf_get_size(struct stat *);
 
 //判断主动模式是否开启
-int is_port_active(session_t *);
+static int is_port_active(session_t *);
 //被动模式是否开启
-int is_pasv_active(session_t *);
+static int is_pasv_active(session_t *);
 
 //返回值表示成功与否
 int get_trans_data_fd(session_t *ses)
@@ -31,6 +31,12 @@ int get_trans_data_fd(session_t *ses)
        return 0;
    }
 
+   if(is_port && is_pasv)
+   {
+       fprintf(stderr, "both of PORT and PASV are active\n");
+       exit(EXIT_FAILURE);
+   }
+
    //主动模式
    if(is_port)
    {
@@ -44,7 +50,18 @@ int get_trans_data_fd(session_t *ses)
        free(ses->p_addr);
        ses->p_addr = NULL;
    }
-   
+
+   if(is_pasv)
+   {
+       int peerfd = accept_timeout(ses->listen_fd, NULL, tunable_accept_timeout);
+       if(peerfd == -1)
+           ERR_EXIT("accept_timeout");
+       ses->data_fd = peerfd;
+
+       //清除pasv模式
+       close(ses->listen_fd);
+       ses->listen_fd = -1;
+   }
    return 1;
 }
 
@@ -53,7 +70,7 @@ int get_trans_data_fd(session_t *ses)
  */
 void trans_list(session_t *ses)
 {
-   DIR *dir = opendir(".");
+    DIR *dir = opendir(".");
     if(dir == NULL)
         ERR_EXIT("opendir");
 
@@ -205,12 +222,12 @@ static const char *statbuf_get_size(struct stat *sbuf)
     return buf;
 }
 
-int is_port_active(session_t *ses)
+static int is_port_active(session_t *ses)
 {
    return (ses->p_addr != NULL);
 }
 
-int is_pasv_active(session_t *ses)
+static int is_pasv_active(session_t *ses)
 {
-   return 0;
+    return (ses->listen_fd != -1);
 }

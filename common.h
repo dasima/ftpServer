@@ -22,6 +22,8 @@
 #include <crypt.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 
 #define ERR_EXIT(m) \
     do { \

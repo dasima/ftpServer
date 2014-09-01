@@ -98,19 +98,24 @@ int tcp_server(const char *host, unsigned short port)
  */
 int get_local_ip(char *ip)
 {
-   char host[128] = {0};
-   /*
-    *返回host指向的主机名
-    *
-    */
-   if(gethostname(host, sizeof(host)) < 0)
-       return -1;
-   struct hostent *hp;
-   if((hp = gethostbyname(host)) == NULL)
-       return -1;
+    int sockfd; 
+    if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+    {
+        ERR_EXIT("socket");
+    }
 
-   strcpy(ip, inet_ntoa(*(struct in_addr*)hp->h_addr));
-   return 0;
+    struct ifreq req;
+
+    bzero(&req, sizeof(struct ifreq));
+    strcpy(req.ifr_name, "eth0");
+
+    if(ioctl(sockfd, SIOCGIFADDR, &req) == -1)
+        ERR_EXIT("ioctl");
+
+    struct sockaddr_in *host = (struct sockaddr_in*)&req.ifr_addr;
+    strcpy(ip, inet_ntoa(host->sin_addr));
+    close(sockfd);
+    return 1;
 }
 
 /*
