@@ -1,6 +1,40 @@
 #include "sysutil.h"
+#include "common.h"
+#include "sysutil.h"
 
 /*
+ *函数功能：创建客户套接字
+ *参数port: 端口号 
+ *函数返回值：返回客户端套接字 
+ */
+int tcp_client(unsigned int port)
+{
+    int sockfd;
+    if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+        ERR_EXIT("socket");
+
+    if(port > 0)
+    {
+        int on = 1;
+        if((setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&on, sizeof(on))) == -1)
+            ERR_EXIT("setsockopt");
+
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof addr);
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        char ip[16] = {0};
+        get_local_ip(ip);
+        addr.sin_addr.s_addr = inet_addr(ip);
+
+        if(bind(sockfd, (struct sockaddr *)&addr, sizeof addr) == -1)
+            ERR_EXIT("bind");
+    }
+
+    return sockfd;
+}
+    
+ /*
  *函数功能：启动服务器
  *参数host：服务器IP地址或者服务器主机名
  *参数port：服务器端口

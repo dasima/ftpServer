@@ -20,6 +20,8 @@
 #include <sys/time.h>
 #include <shadow.h>
 #include <crypt.h>
+#include <dirent.h>
+#include <time.h>
 
 #define ERR_EXIT(m) \
     do { \

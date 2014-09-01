@@ -11,7 +11,12 @@ void session_init(session_t *ses)
     ses->peerfd = -1;
     ses->nobody_fd = -1;
     ses->proto_fd = -1;
+
+    ses->user_uid = 0;
     ses->ascii_mode = 0;
+
+    ses->p_addr = NULL;
+    ses->data_fd = -1;
 }
 
 void session_begin(session_t *ses)

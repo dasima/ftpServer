@@ -1,13 +1,15 @@
 #include "command_map.h"
 #include "common.h"
+#include "session.h"
 #include "sysutil.h"
 #include "ftp_codes.h"
 #include "configure.h"
+#include "trans_data.h"
 
 typedef struct ftpcmd
 {
     const char *cmd;    //FTP指令
-    void (*cmd_handler)(session_t *ses);//该指令所对应的执行函数
+    void (*cmd_handler)(session_t *ses);//通过指针函数实现指令所对应的执行函数
 }ftpcmd_t;
 
 //NULL为命令还未实现
@@ -64,7 +66,7 @@ void do_command_map(session_t *ses)
 {
     int i;
     int size = sizeof(ctrl_cmds) / sizeof(ctrl_cmds[0]); //数组大小
-    for (i=0; i<size; ++i)
+    for (i=0; i < size; ++i)
     {
         if (strcmp(ctrl_cmds[i].cmd, ses->com) == 0)
         {
@@ -99,7 +101,7 @@ void ftp_reply(session_t *ses, int status, const char *text)
 void ftp_lreply(session_t *ses, int status, const char *text)
 {
     char tmp[1024] = { 0 };
-    snprintf(tmp, sizeof tmp, "%d %s\r\n", status, text);
+    snprintf(tmp, sizeof tmp, "%d-%s\r\n", status, text);
     writen(ses->peerfd, tmp, strlen(tmp));
 }
 
@@ -156,7 +158,6 @@ void do_pass(session_t *ses)
     ftp_reply(ses, FTP_LOGINOK, "Login successful.");
 }
 
-
 void do_cwd(session_t *ses)
 {
 
@@ -174,11 +175,32 @@ void do_quit(session_t *ses)
 
 void do_port(session_t *ses)
 {
+    //设置主动工作模式
+   unsigned int v[6] = {0};
+   sscanf(ses->args, "%u,%u,%u,%u,%u,%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
 
+   ses->p_addr = (struct sockaddr_in *)malloc(sizeof (struct sockaddr_in));
+   memset(ses->p_addr, 0, sizeof(struct sockaddr_in));
+   ses->p_addr->sin_family = AF_INET;
+
+   //port
+   char *p = (char*)&ses->p_addr->sin_port;
+   p[0] = v[4];
+   p[1] = v[5];
+
+   //ip
+   p = (char*)&ses->p_addr->sin_addr.s_addr;
+   p[0] = v[0];
+   p[1] = v[1];
+   p[2] = v[2];
+   p[3] = v[3];
+
+   ftp_reply(ses, FTP_PORTOK, "PORT command successful. Consider using PASV.");
 }
 
 void do_pasv(session_t *ses)
 {
+   //ftp_reply(ses, FTP_PORTOK, "PORT command successful. Consider using PASV.");
 
 }
 
@@ -227,7 +249,20 @@ void do_appe(session_t *ses)
 
 void do_list(session_t *ses)
 {
+    //发起数据连接
+    if(get_trans_data_fd(ses) == 0)
+        return;
 
+    //给出150 Here comes the directory listing.
+    ftp_reply(ses, FTP_DATACONN, "Here comes the directory listing.");
+
+    //传输目录列表 
+    trans_list(ses);
+    close(ses->data_fd); // 传输结束不要忘了关闭
+    ses->data_fd = -1;
+
+    //给出226，Directory send OK.
+    ftp_reply(ses, FTP_TRANSFEROK, "Directory send OK.");
 }
 
 void do_nlst(session_t *ses)
@@ -250,6 +285,9 @@ void do_pwd(session_t *ses)
     char tmp[1024] = {0};
     if(getcwd(tmp, sizeof tmp) == NULL)
     {
+        //return值为-1/0，函数进入系统内核，
+        //返回值判断用perror
+        //返回值为NULL,不用perror，fprintf(stderr, "a");
         fprintf(stderr, "get cwd error\n");
         ftp_reply(ses, FTP_BADMODE, "error");
         return;

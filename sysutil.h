@@ -2,6 +2,8 @@
 #define _SYSUTIL_H_
 #include "common.h"
 
+//创建客户fd
+int tcp_client(unsigned int);
 //创建监听fd
 int tcp_server(const char *, unsigned short);
 int get_local_ip(char *);

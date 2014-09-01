@@ -10,7 +10,7 @@
  * 所以这里parseconf_load_settting()
  * 函数的声明和实现都在源文件中
  */
-void parseconf_load_setting(const char *setting);
+static void parseconf_load_setting(const char *setting);
 
 //bool类型的配置变量
 //这种struct a b;的形式值得借鉴
@@ -80,7 +80,7 @@ void parseconf_load_file(const char *path)
     fclose(fp);
 }
 
-void parseconf_load_setting(const char *setting)
+static void parseconf_load_setting(const char *setting)
 {
     // 去除左空格
     while (isspace(*setting))
