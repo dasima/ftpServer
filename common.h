@@ -26,6 +26,8 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <linux/capability.h>
+#include <sys/syscall.h>
+#include <bits/syscall.h>
 
 #define ERR_EXIT(m) \
     do { \
