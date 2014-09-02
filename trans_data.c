@@ -4,6 +4,7 @@
 #include "ftp_codes.h"
 #include "configure.h"
 #include "sysutil.h"
+#include "priv_sock.h"
 
 //这5个函数为静态函数, 他们只能在本文件中使用
 static const char *statbuf_get_perms(struct stat *);
@@ -40,12 +41,22 @@ int get_trans_data_fd(session_t *ses)
    //主动模式
    if(is_port)
    {
-       int data_fd = tcp_client(0);
-       int ret = connect_timeout(data_fd, ses->p_addr, tunable_connect_timeout);
-       //int ret = connect(data_fd, ses->p_addr, sizeof(struct sockaddr_in));
-       if(ret == -1)
-           ERR_EXIT("connect_timeout");
-       ses->data_fd = data_fd;
+       //发送cmd
+       priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_GET_DATA_SOCK);
+       //发送ip port
+       char *ip = inet_ntoa(ses->p_addr->sin_addr);
+       uint16_t port = ntohs(ses->p_addr->sin_port);
+       priv_sock_send_str(ses->proto_fd, ip, strlen(ip));
+       priv_sock_send_int(ses->proto_fd, port);
+       //接收应答
+       char result = priv_sock_recv_result(ses->proto_fd);
+       if(result == PRIV_SOCK_RESULT_BAD)
+       {
+           fprintf(stderr, "get data fd error\n");
+           exit(EXIT_FAILURE);
+       }
+       //接收fd
+       ses->data_fd = priv_sock_recv_fd(ses->proto_fd);
 
        //释放port模式
        free(ses->p_addr);
