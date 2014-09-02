@@ -65,14 +65,19 @@ int get_trans_data_fd(session_t *ses)
 
    if(is_pasv)
    {
-       int peerfd = accept_timeout(ses->listen_fd, NULL, tunable_accept_timeout);
-       if(peerfd == -1)
-           ERR_EXIT("accept_timeout");
-       ses->data_fd = peerfd;
+       //先给nobody发命令
+       priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_PASV_ACCEPT);
 
-       //清除pasv模式
-       close(ses->listen_fd);
-       ses->listen_fd = -1;
+       //接收结果
+       char res = priv_sock_recv_result(ses->proto_fd);
+       if(res == PRIV_SOCK_RESULT_BAD)
+       {
+           fprintf(stderr, "get data fd error\n");
+           exit(EXIT_FAILURE);
+       }
+
+       //接收fd
+       ses->data_fd = priv_sock_recv_fd(ses->proto_fd);
    }
    return 1;
 }
@@ -241,5 +246,8 @@ static int is_port_active(session_t *ses)
 
 static int is_pasv_active(session_t *ses)
 {
-    return (ses->listen_fd != -1);
+    //首先给nobody发命令
+    priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_PASV_ACTIVE);
+    //接收结果
+    return priv_sock_recv_int(ses->proto_fd);
 }

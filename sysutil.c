@@ -33,8 +33,8 @@ int tcp_client(unsigned int port)
 
     return sockfd;
 }
-    
- /*
+
+/*
  *函数功能：启动服务器
  *参数host：服务器IP地址或者服务器主机名
  *参数port：服务器端口
@@ -244,7 +244,7 @@ int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 
         timeout.tv_sec = wait_seconds;
         timeout.tv_usec = 0;
-        
+
         do
         {
             ret = select(fd + 1, &accept_fd, NULL, NULL, &timeout);
@@ -292,7 +292,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
         struct timeval timeout;
         timeout.tv_sec = wait_seconds;
         timeout.tv_usec = 0;
-        
+
         do
         {
             /*一旦连接建立，套接字就可写*/

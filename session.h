@@ -28,6 +28,9 @@ typedef struct
 //初始化session
 void session_init(session_t *);
 
+//将三个字符数组置位
+void session_reset_command(session_t *);
+
 //处理会话，这里主要是创建nobody与ftp子进程
 void session_begin(session_t *);
 

@@ -5,6 +5,7 @@
 #include "ftp_codes.h"
 #include "configure.h"
 #include "trans_data.h"
+#include "priv_sock.h"
 
 typedef struct ftpcmd
 {
@@ -201,25 +202,24 @@ void do_pasv(session_t *ses)
 {
     char ip[16] = {0};
     get_local_ip(ip);
-    //创建监听套接字
-    int listenfd = tcp_server(ip, 0);
-    ses->listen_fd = listenfd;
 
-    //把ip和port发送给客户端
-    struct sockaddr_in addr;
-    socklen_t len = sizeof addr;
-    if(getsockname(listenfd, (struct sockaddr*)&addr, &len) == -1)
-        ERR_EXIT("getsockname");
+    //给nobody发送命令
+    priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_PASV_LISTEN);
+    //接收nobody的应答
+    char res = priv_sock_recv_result(ses->proto_fd);
+    if(res == PRIV_SOCK_RESULT_BAD)
+    {
+        ftp_reply(ses, FTP_BADCMD, "get listenfd error");
+        return;
+    }
+    //接收port
+    uint16_t port = priv_sock_recv_int(ses->proto_fd);
 
     //227 Entering Passive Mode (192,168,44,136,194,6).
     unsigned int v[6];
     sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
-    unsigned char *p = (unsigned char*)&addr.sin_addr.s_addr;
-    v[0] = p[0];
-    v[1] = p[1];
-    v[2] = p[2];
-    v[3] = p[3];
-    p = (unsigned char*)&addr.sin_port;
+    uint16_t net_endian_port = htons(port); //网络字节序
+    unsigned char *p = (unsigned char*)&net_endian_port;
     v[4] = p[0];
     v[5] = p[1];
 

@@ -21,6 +21,13 @@ void session_init(session_t *ses)
     ses->listen_fd = -1;
 }
 
+void session_reset_command(session_t *ses)
+{
+    memset(ses->command, 0, sizeof (ses->command));
+    memset(ses->com, 0, sizeof (ses->com));
+    memset(ses->args, 0, sizeof (ses->args));
+}
+
 void session_begin(session_t *ses)
 {
     priv_sock_init(ses);
