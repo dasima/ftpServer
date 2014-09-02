@@ -278,11 +278,12 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 {
     int ret;
     socklen_t addrlen = sizeof(struct sockaddr_in);
+
     if(wait_seconds > 0)
         activate_nonblock(fd);
 
     ret = connect(fd, (struct sockaddr*)addr, addrlen);
-    if(ret < 0 && errno == ETIMEDOUT)
+    if(ret < 0 && errno == EINPROGRESS)
     {
         fd_set connect_fd;
         FD_ZERO(&connect_fd);
@@ -291,7 +292,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
         struct timeval timeout;
         timeout.tv_sec = wait_seconds;
         timeout.tv_usec = 0;
-
+        
         do
         {
             /*一旦连接建立，套接字就可写*/

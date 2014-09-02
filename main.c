@@ -14,6 +14,9 @@ int main(int argc, const char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if(signal(SIGCHLD, SIG_IGN) == SIG_ERR)
+        ERR_EXIT("signal");
+
     parseconf_load_file("ftpserver.conf");
     print_conf();
 

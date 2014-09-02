@@ -176,26 +176,25 @@ void do_quit(session_t *ses)
 void do_port(session_t *ses)
 {
     //设置主动工作模式
-   unsigned int v[6] = {0};
-   sscanf(ses->args, "%u,%u,%u,%u,%u,%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
+    //PORT 192,168,44,1,200,174
+    unsigned int v[6] = {0};
+    sscanf(ses->args, "%u,%u,%u,%u,%u,%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
 
-   ses->p_addr = (struct sockaddr_in *)malloc(sizeof (struct sockaddr_in));
-   memset(ses->p_addr, 0, sizeof(struct sockaddr_in));
-   ses->p_addr->sin_family = AF_INET;
+    ses->p_addr = (struct sockaddr_in *)malloc(sizeof (struct sockaddr_in));
+    memset(ses->p_addr, 0, sizeof(struct sockaddr_in));
+    ses->p_addr->sin_family = AF_INET;
 
-   //port
-   char *p = (char*)&ses->p_addr->sin_port;
-   p[0] = v[4];
-   p[1] = v[5];
+    char *p = (char*)&ses->p_addr->sin_port;
+    p[0] = v[4];
+    p[1] = v[5];
 
-   //ip
-   p = (char*)&ses->p_addr->sin_addr.s_addr;
-   p[0] = v[0];
-   p[1] = v[1];
-   p[2] = v[2];
-   p[3] = v[3];
+    p = (char*)&ses->p_addr->sin_addr.s_addr;
+    p[0] = v[0];
+    p[1] = v[1];
+    p[2] = v[2];
+    p[3] = v[3];
 
-   ftp_reply(ses, FTP_PORTOK, "PORT command successful. Consider using PASV.");
+    ftp_reply(ses, FTP_PORTOK, "PORT command successful. Consider using PASV.");
 }
 
 void do_pasv(session_t *ses)

@@ -58,6 +58,12 @@ char priv_sock_recv_cmd(int fd)
 {
    char res;
     int ret = readn(fd, &res, sizeof res);
+    //子进程关闭
+    if(ret == 0)
+    {
+        printf("Proto close!\n");
+        exit(EXIT_SUCCESS);
+    }
     if(ret != sizeof(res))
     {
          fprintf(stderr, "priv_sock_recv_cmd error\n");

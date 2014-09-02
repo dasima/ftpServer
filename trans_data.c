@@ -42,6 +42,7 @@ int get_trans_data_fd(session_t *ses)
    {
        int data_fd = tcp_client(0);
        int ret = connect_timeout(data_fd, ses->p_addr, tunable_connect_timeout);
+       //int ret = connect(data_fd, ses->p_addr, sizeof(struct sockaddr_in));
        if(ret == -1)
            ERR_EXIT("connect_timeout");
        ses->data_fd = data_fd;
