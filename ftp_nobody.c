@@ -1,6 +1,8 @@
 #include "ftp_nobody.h"
 #include "common.h"
 #include "sysutil.h"
+#include "priv_command.h"
+#include "priv_sock.h"
 
 void set_nobody();
 
@@ -13,15 +15,25 @@ void handle_nobody(session_t *ses)
     char cmd;
     while(1)
     {
-        int ret =readn(ses->nobody_fd, &cmd, sizeof(cmd));
-        if(ret == -1)
+        cmd = priv_sock_recv_cmd(ses->nobody_fd);
+        switch (cmd)
         {
-            if(errno == EINTR)
-                continue;
-            ERR_EXIT("readn");
+            case PRIV_SOCK_GET_DATA_SOCK:
+                privop_pasv_get_data_sock(ses);
+                break;
+            case PRIV_SOCK_PASV_ACTIVE:
+                privop_pasv_active(ses);
+                break;
+            case PRIV_SOCK_PASV_LISTEN:
+                privop_pasv_listen(ses);
+                break;
+            case PRIV_SOCK_PASV_ACCEPT:
+                privop_pasv_accept(ses);
+                break;
+            default:
+                fprintf(stderr, "Unkown command\n");
+                exit(EXIT_FAILURE);
         }
-        for(;;)
-            pause();
     }
 }
 
