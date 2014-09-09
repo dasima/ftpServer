@@ -28,9 +28,9 @@
 #include <bits/syscall.h>
 
 #define ERR_EXIT(m) \
- do { \
- perror(m);\
- exit(EXIT_FAILURE);\
- }while(0)
+    do { \
+        perror(m);\
+        exit(EXIT_FAILURE);\
+    }while(0)
 
 #endif  /*_COMMON_H_*/

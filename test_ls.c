@@ -9,10 +9,10 @@
 #include <time.h>
 
 #define ERR_EXIT(m) \
-do { \
-    perror(m);\
-    exit(EXIT_FAILURE);\
-}while(0)
+    do { \
+        perror(m);\
+        exit(EXIT_FAILURE);\
+    }while(0)
 
 const char *statbuf_get_perms(struct stat *sbuf);
 const char *statbuf_get_date(struct stat *sbuf);
@@ -64,26 +64,26 @@ const char *statbuf_get_perms(struct stat *sbuf)
     switch(mode & S_IFMT)
     {
         case S_IFSOCK:
-        perms[0] = 's';
-        break;
+            perms[0] = 's';
+            break;
         case S_IFLNK:
-        perms[0] = 'l';
-        break;
+            perms[0] = 'l';
+            break;
         case S_IFREG:
-        perms[0] = '-';
-        break;
+            perms[0] = '-';
+            break;
         case S_IFBLK:
-        perms[0] = 'b';
-        break;
+            perms[0] = 'b';
+            break;
         case S_IFDIR:
-        perms[0] = 'd';
-        break;
+            perms[0] = 'd';
+            break;
         case S_IFCHR:
-        perms[0] = 'c';
-        break;
+            perms[0] = 'c';
+            break;
         case S_IFIFO:
-        perms[0] = 'p';
-        break;
+            perms[0] = 'p';
+            break;
     }
 
     //权限
@@ -107,13 +107,13 @@ const char *statbuf_get_perms(struct stat *sbuf)
         perms[9] = 'x';
 
     if(mode & S_ISUID)
-       perms[3] = (perms[3] == 'x') ? 's' : 'S';
-   if(mode & S_ISGID)
-       perms[6] = (perms[6] == 'x') ? 's' : 'S';
-   if(mode & S_ISVTX)
-       perms[9] = (perms[9] == 'x') ? 't' : 'T';
+        perms[3] = (perms[3] == 'x') ? 's' : 'S';
+    if(mode & S_ISGID)
+        perms[6] = (perms[6] == 'x') ? 's' : 'S';
+    if(mode & S_ISVTX)
+        perms[9] = (perms[9] == 'x') ? 't' : 'T';
 
-   return perms;
+    return perms;
 }
 
 const char *statbuf_get_date(struct stat *sbuf)

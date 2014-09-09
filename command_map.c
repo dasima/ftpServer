@@ -202,29 +202,29 @@ void do_pasv(Session_t *sess)
 {
     char ip[16] = {0};
     get_local_ip(ip);
-    
-     //给nobody发送命令
+
+    //给nobody发送命令
     priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_LISTEN);
- //接收nobody的应答
+    //接收nobody的应答
     char res = priv_sock_recv_result(sess->proto_fd);
     if(res == PRIV_SOCK_RESULT_BAD)
     {
-       ftp_reply(sess, FTP_BADCMD, "get listenfd error");
-       return;
-   }
- //接收port
-   uint16_t port = priv_sock_recv_int(sess->proto_fd);
+        ftp_reply(sess, FTP_BADCMD, "get listenfd error");
+        return;
+    }
+    //接收port
+    uint16_t port = priv_sock_recv_int(sess->proto_fd);
 
     //227 Entering Passive Mode (192,168,44,136,194,6).
-   unsigned int v[6];
+    unsigned int v[6];
     sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
- uint16_t net_endian_port = htons(port); //网络字节序
- unsigned char *p = (unsigned char*)&net_endian_port;
-   v[5] = p[1];
-   char text[1024] = {0};
-   snprintf(text, sizeof text, "Entering Passive Mode (%u,%u,%u,%u,%u,%u).", v[0], v[1], v[2], v[3], v[4], v[5]);
+    uint16_t net_endian_port = htons(port); //网络字节序
+    unsigned char *p = (unsigned char*)&net_endian_port;
+    v[5] = p[1];
+    char text[1024] = {0};
+    snprintf(text, sizeof text, "Entering Passive Mode (%u,%u,%u,%u,%u,%u).", v[0], v[1], v[2], v[3], v[4], v[5]);
 
-   ftp_reply(sess, FTP_PASVOK, text);
+    ftp_reply(sess, FTP_PASVOK, text);
 }
 
 void do_type(Session_t *sess)
