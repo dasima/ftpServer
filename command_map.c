@@ -162,17 +162,32 @@ void do_pass(Session_t *sess)
 
 void do_cwd(Session_t *sess)
 {
-
+    if(chdir(sess->args) == -1)
+    {
+     //550
+     ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
+     return;
+ }
+     //250 Directory successfully changed.
+ ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
 
 void do_cdup(Session_t *sess)
 {
-
+    if(chdir("..") == -1)
+    {
+        //550
+       ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
+       return;
+    }
+    //250 Directory successfully changed.
+    ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
 
 void do_quit(Session_t *sess)
 {
-
+    ftp_reply(sess, FTP_GOODBYE, "Good Bye!");
+    exit(EXIT_SUCCESS);
 }
 
 void do_port(Session_t *sess)
@@ -376,7 +391,7 @@ void do_stat(Session_t *sess)
 
 void do_noop(Session_t *sess)
 {
-
+    ftp_reply(sess, FTP_GREET, "(FtpServer 1.0)");
 }
 
 void do_help(Session_t *sess)
