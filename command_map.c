@@ -164,12 +164,12 @@ void do_cwd(Session_t *sess)
 {
     if(chdir(sess->args) == -1)
     {
-     //550
-     ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
-     return;
- }
-     //250 Directory successfully changed.
- ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
+        //550
+        ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
+        return;
+    }
+    //250 Directory successfully changed.
+    ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
 
 void do_cdup(Session_t *sess)
@@ -177,11 +177,11 @@ void do_cdup(Session_t *sess)
     if(chdir("..") == -1)
     {
         //550
-       ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
-       return;
-   }
+        ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
+        return;
+    }
     //250 Directory successfully changed.
-   ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
+    ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
 
 void do_quit(Session_t *sess)
@@ -333,81 +333,81 @@ void do_mkd(Session_t *sess)
 {
     if(mkdir(sess->args, 0777) == -1)
     {
-       ftp_reply(sess, FTP_FILEFAIL, "Create directory operation failed.");
-       return;
-   }
+        ftp_reply(sess, FTP_FILEFAIL, "Create directory operation failed.");
+        return;
+    }
 
-   char text[1024] = {0};
- if(sess->args[0] == '/') //绝对路径
-   snprintf(text, sizeof text, "%s created.", sess->args);
-else
-{
- //char *getcwd(char *buf, size_t size);
-   char tmp[1024] = {0};
-   if(getcwd(tmp, sizeof tmp) == NULL)
-   {
-       ERR_EXIT("getcwd");
-   }
-   snprintf(text, sizeof text, "%s/%s created.", tmp, sess->args);
-}
-ftp_reply(sess, FTP_MKDIROK, text);
+    char text[1024] = {0};
+    if(sess->args[0] == '/') //绝对路径
+        snprintf(text, sizeof text, "%s created.", sess->args);
+    else
+    {
+        //char *getcwd(char *buf, size_t size);
+        char tmp[1024] = {0};
+        if(getcwd(tmp, sizeof tmp) == NULL)
+        {
+            ERR_EXIT("getcwd");
+        }
+        snprintf(text, sizeof text, "%s/%s created.", tmp, sess->args);
+    }
+    ftp_reply(sess, FTP_MKDIROK, text);
 }
 
 void do_rmd(Session_t *sess)
 {
     if(rmdir(sess->args) == -1)
     {
- //550 Remove directory operation failed.
-       ftp_reply(sess, FTP_FILEFAIL, "Remove directory operation failed.");
-       return;
-   }
- //250 Remove directory operation successful.
-   ftp_reply(sess, FTP_RMDIROK, "Remove directory operation successful.");
+        //550 Remove directory operation failed.
+        ftp_reply(sess, FTP_FILEFAIL, "Remove directory operation failed.");
+        return;
+    }
+    //250 Remove directory operation successful.
+    ftp_reply(sess, FTP_RMDIROK, "Remove directory operation successful.");
 }
 
 void do_dele(Session_t *sess)
 {
     if(unlink(sess->args) == -1)
     {
-     //550 Delete operation failed.
-     ftp_reply(sess, FTP_FILEFAIL, "Delete operation failed.");
-     return;
- }
+        //550 Delete operation failed.
+        ftp_reply(sess, FTP_FILEFAIL, "Delete operation failed.");
+        return;
+    }
     //250 Delete operation successful.
- ftp_reply(sess, FTP_DELEOK, "Delete operation successful.");
+    ftp_reply(sess, FTP_DELEOK, "Delete operation successful.");
 }
 
 void do_rnfr(Session_t *sess)
 {
     if(sess->rnfr_name) //防止内存泄露
     {
-       free(sess->rnfr_name);
-       sess->rnfr_name = NULL;
-   }
-   sess->rnfr_name = (char*)malloc(strlen(sess->args)+1);
-   strcpy(sess->rnfr_name, sess->args);
- //350 Ready for RNTO.
-   ftp_reply(sess, FTP_RNFROK, "Ready for RNTO.");
+        free(sess->rnfr_name);
+        sess->rnfr_name = NULL;
+    }
+    sess->rnfr_name = (char*)malloc(strlen(sess->args)+1);
+    strcpy(sess->rnfr_name, sess->args);
+    //350 Ready for RNTO.
+    ftp_reply(sess, FTP_RNFROK, "Ready for RNTO.");
 }
 
 void do_rnto(Session_t *sess)
 {
     if(sess->rnfr_name == NULL)
     {
-     //503 RNFR required first.
-       ftp_reply(sess, FTP_NEEDRNFR, "RNFR required first.");
-       return;
-   }
+        //503 RNFR required first.
+        ftp_reply(sess, FTP_NEEDRNFR, "RNFR required first.");
+        return;
+    }
 
-   if(rename(sess->rnfr_name, sess->args) == -1)
-   {
-       ftp_reply(sess, FTP_FILEFAIL, "Rename failed.");
-       return;
-   }
-   free(sess->rnfr_name);
-   sess->rnfr_name = NULL;
+    if(rename(sess->rnfr_name, sess->args) == -1)
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "Rename failed.");
+        return;
+    }
+    free(sess->rnfr_name);
+    sess->rnfr_name = NULL;
     //250 Rename successful.
-   ftp_reply(sess, FTP_RENAMEOK, "Rename successful.");
+    ftp_reply(sess, FTP_RENAMEOK, "Rename successful.");
 }
 
 void do_site(Session_t *sess)
@@ -441,7 +441,23 @@ void do_feat(Session_t *sess)
 
 void do_size(Session_t *sess)
 {
+    struct stat sbuf;
+    if(lstat(sess->args, &sbuf) == -1)
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "SIZE operation failed.");
+        return;
+    }
 
+    //只能求普通文件size
+    if(!S_ISREG(sbuf.st_mode))
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "SIZE operation failed.");
+        return;
+    }
+    //213 6
+    char text[1024] = {0};
+    snprintf(text, sizeof text, "%lu", sbuf.st_size);
+    ftp_reply(sess, FTP_SIZEOK, text);
 }
 
 void do_stat(Session_t *sess)
