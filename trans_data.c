@@ -21,6 +21,29 @@ static int is_pasv_active(Session_t *sess);
 static void get_port_data_fd(Session_t *sess);
 static void get_pasv_data_fd(Session_t *sess);
 
+static void trans_list_common(Session_t *sess, int list);
+
+void trans_list(Session_t *sess, int list)
+{
+ //发起数据连接
+   if(get_trans_data_fd(sess) == 0)
+       return ;
+
+ //给出150 Here comes the directory listing.
+   ftp_reply(sess, FTP_DATACONN, "Here comes the directory listing.");
+
+ //传输目录列表
+   if(list == 1)
+       trans_list_common(sess, 1);
+   else
+       trans_list_common(sess, 0);
+ close(sess->data_fd); //传输结束记得关闭
+ sess->data_fd = -1;
+
+ //给出226 Directory send OK.
+ ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
+}
+
 //返回值表示成功与否
 int get_trans_data_fd(Session_t *sess)
 {
@@ -44,93 +67,16 @@ int get_trans_data_fd(Session_t *sess)
     //主动模式
     if(is_port)
     {
-        /*
-        //发送cmd
-        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK);
-        //发送ip port
-        char *ip = inet_ntoa(sess->p_addr->sin_addr);
-        uint16_t port = ntohs(sess->p_addr->sin_port);
-        priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
-        priv_sock_send_int(sess->proto_fd, port);
-        //接收应答
-        char result = priv_sock_recv_result(sess->proto_fd);
-        if(result == PRIV_SOCK_RESULT_BAD)
-        {
-        fprintf(stderr, "get data fd error\n");
-        exit(EXIT_FAILURE);
-        }
-        //接收fd
-        sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
-
-        //释放port模式
-        free(sess->p_addr);
-        sess->p_addr = NULL;
-        */
         get_port_data_fd(sess);
     }
 
     if(is_pasv)
     {
-        /*
-        //先给nobody发命令
-        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
-
-        //接收结果
-        char res = priv_sock_recv_result(sess->proto_fd);
-        if(res == PRIV_SOCK_RESULT_BAD)
-        {
-        fprintf(stderr, "get data fd error\n");
-        exit(EXIT_FAILURE);
-        }
-
-        //接收fd
-        sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
-        */
         get_pasv_data_fd(sess);    
     }
 
     return 1;
 }
-
-/*
- *功能：传输文件列表
- */
-
-void trans_list(Session_t *sess)
-{
-    DIR *dir = opendir(".");
-    if(dir == NULL)
-        ERR_EXIT("opendir");
-
-    struct dirent *dr;
-    while((dr = readdir(dir)))
-    {
-        const char *filename = dr->d_name;
-        if(filename[0] == '.')
-            continue;
-
-        char buf[1024] = {0};
-        struct stat sbuf;
-        if(lstat(filename, &sbuf) == -1)
-            ERR_EXIT("lstat");
-
-        strcpy(buf, statbuf_get_perms(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_user_info(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_size(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_date(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_filename(&sbuf, filename));
-
-        strcat(buf, "\r\n");
-        writen(sess->data_fd, buf, strlen(buf));
-    }
-
-    closedir(dir);
-}
-
 
 static const char *statbuf_get_perms(struct stat *sbuf)
 {
@@ -142,26 +88,26 @@ static const char *statbuf_get_perms(struct stat *sbuf)
     switch(mode & S_IFMT)
     {
         case S_IFSOCK:
-            perms[0] = 's';
-            break;
+        perms[0] = 's';
+        break;
         case S_IFLNK:
-            perms[0] = 'l';
-            break;
+        perms[0] = 'l';
+        break;
         case S_IFREG:
-            perms[0] = '-';
-            break;
+        perms[0] = '-';
+        break;
         case S_IFBLK:
-            perms[0] = 'b';
-            break;
+        perms[0] = 'b';
+        break;
         case S_IFDIR:
-            perms[0] = 'd';
-            break;
+        perms[0] = 'd';
+        break;
         case S_IFCHR:
-            perms[0] = 'c';
-            break;
+        perms[0] = 'c';
+        break;
         case S_IFIFO:
-            perms[0] = 'p';
-            break;
+        perms[0] = 'p';
+        break;
     }
     //权限
     if(mode & S_IRUSR)
@@ -223,7 +169,7 @@ static const char *statbuf_get_filename(struct stat *sbuf, const char *name)
         char linkfile[1024] = {0};
         if(readlink(name, linkfile, sizeof linkfile) == -1)
             ERR_EXIT("readlink");
-        snprintf(filename, sizeof filename, " %s -> %s", name, linkfile);
+        snprintf(filename, sizeof filename, "%s -> %s", name, linkfile);
     }else
     {
         strcpy(filename, name);
@@ -303,4 +249,47 @@ static void get_pasv_data_fd(Session_t *sess)
 
     //接收fd
     sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
+}
+
+
+static void trans_list_common(Session_t *sess, int list)
+{
+   DIR *dir = opendir(".");
+   if(dir == NULL)
+       ERR_EXIT("opendir");
+
+   struct dirent *dr;
+   while((dr = readdir(dir)))
+   {
+       const char *filename = dr->d_name;
+       if(filename[0] == '.')
+           continue;
+
+       char buf[1024] = {0};
+       struct stat sbuf;
+       if(lstat(filename, &sbuf) == -1)
+           ERR_EXIT("lstat");
+
+ if(list == 1) // LIST
+ {
+   strcpy(buf, statbuf_get_perms(&sbuf));
+   strcat(buf, " ");
+   strcat(buf, statbuf_get_user_info(&sbuf));
+   strcat(buf, " ");
+   strcat(buf, statbuf_get_size(&sbuf));
+   strcat(buf, " ");
+   strcat(buf, statbuf_get_date(&sbuf));
+   strcat(buf, " ");
+   strcat(buf, statbuf_get_filename(&sbuf, filename));
+}
+ else //NLST
+ {
+   strcpy(buf, statbuf_get_filename(&sbuf, filename));
+}
+
+strcat(buf, "\r\n");
+writen(sess->data_fd, buf, strlen(buf));
+}
+
+closedir(dir);
 }

@@ -1,7 +1,7 @@
 #include "sysutil.h"
 #include "common.h"
 
-//static ssize_t recv_peek(int sockfd, void *buf, size_t len);
+static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
 /*
  *函数功能：创建客户套接字

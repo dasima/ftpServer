@@ -273,24 +273,13 @@ void do_appe(Session_t *sess)
 
 void do_list(Session_t *sess)
 {
-    //发起数据连接
-    if(get_trans_data_fd(sess) == 0)
-        return ;
-
-    //给出150 Here comes the directory listing.
-    ftp_reply(sess, FTP_DATACONN, "Here comes the directory listing.");
-
-    //传输目录列表
-    trans_list(sess);
-    close(sess->data_fd); //传输结束记得关闭
-    sess->data_fd = -1;
-    //给出226 Directory send OK.
-    ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");	
+    trans_list(sess, 1);
 }
 
+//实现简单的目录传输
 void do_nlst(Session_t *sess)
 {
-
+    trans_list(sess, 0);
 }
 
 void do_rest(Session_t *sess)
