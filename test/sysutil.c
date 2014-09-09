@@ -1,7 +1,8 @@
 #include "sysutil.h"
 #include "common.h"
+#include "sysutil.h"
 
-//static ssize_t recv_peek(int sockfd, void *buf, size_t len);
+static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
 /*
  *函数功能：创建客户套接字
@@ -50,6 +51,7 @@ int tcp_server(const char *host, unsigned short port)
     struct sockaddr_in seraddr;
     memset(&seraddr, 0, sizeof(seraddr));
     seraddr.sin_family = AF_INET;
+    //seraddr.sin_port = htons(port);这里改了
     if(host != NULL)
     {
         /*
@@ -73,7 +75,7 @@ int tcp_server(const char *host, unsigned short port)
         }
     }
     else
-        seraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+       seraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     seraddr.sin_port = htons(port);
 
@@ -100,6 +102,7 @@ int tcp_server(const char *host, unsigned short port)
  */
 int get_local_ip(char *ip)
 {
+    /*
     int sockfd; 
     if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
     {
@@ -118,12 +121,23 @@ int get_local_ip(char *ip)
     strcpy(ip, inet_ntoa(host->sin_addr));
     close(sockfd);
     return 1;
+    */
+    char host[100] = {0};
+    if (gethostname(host, sizeof(host)) < 0)
+        return -1;
+    struct hostent *hp;
+    if ((hp = gethostbyname(host)) == NULL)
+        return -1;
+
+    strcpy(ip, inet_ntoa(*(struct in_addr*)hp->h_addr));
+    return 0;
 }
 
 /*
  *功能：设置I/O为非阻塞模式
  *fd：文件描述符
  */
+//????????????
 void activate_nonblock(int fd)
 {
     int ret;
@@ -131,16 +145,17 @@ void activate_nonblock(int fd)
     if(flags == -1)
         ERR_EXIT("fcntl");
 
-    flags |= O_NONBLOCK;//
+    flags |= O_NONBLOCK;//?????
     ret = fcntl(fd, F_SETFL, flags);
     if(ret == -1)
         ERR_EXIT("fcntl");
 }
 
 /*
- *功能：设置I/O为阻塞模式
+ *功能：设置I/O为非阻塞模式
  *fd：文件描述符
  */
+//?????????
 void deactivate_nonblock(int fd)
 {
     int ret;
@@ -378,7 +393,7 @@ ssize_t readn(int fd, void *buf, size_t n)
  *n:要发送的字节数
  *返回值：成功返回n,失败返回-1
  */
-ssize_t writen(int fd, const void *buf, size_t n)
+ssize_t writen(int fd, void *buf, size_t n)
 {
     size_t nleft = n;
     ssize_t nwrite;

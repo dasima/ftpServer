@@ -1,12 +1,8 @@
-#ifndef _NO_BODY_H_
-#define _NO_BODY_H_
+#ifndef _FTP_NOBODY_H_
+#define _FTP_NOBODY_H_ 
 
-/*
- *父进程
- *
- */
 #include "session.h"
 
-void handle_nobody(session_t *);
+void handle_nobody(Session_t *sess);
 
-#endif  /*_NO_BODY_H_*/
+#endif  /*_FTP_NOBODY_H_*/

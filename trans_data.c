@@ -1,92 +1,103 @@
 #include "trans_data.h"
 #include "common.h"
-#include "command_map.h"
-#include "ftp_codes.h"
-#include "configure.h"
 #include "sysutil.h"
+#include "ftp_codes.h"
+#include "command_map.h"
+#include "configure.h"
 #include "priv_sock.h"
 
 //这5个函数为静态函数, 他们只能在本文件中使用
-static const char *statbuf_get_perms(struct stat *);
-static const char *statbuf_get_date(struct stat *);
-static const char *statbuf_get_filename(struct stat*, const char *);
-static const char *statbuf_get_user_info(struct stat *);
-static const char *statbuf_get_size(struct stat *);
+static const char *statbuf_get_perms(struct stat *sbuf);
+static const char *statbuf_get_date(struct stat *sbuf);
+static const char *statbuf_get_filename(struct stat *sbuf, const char *name);
+static const char *statbuf_get_user_info(struct stat *sbuf);
+static const char *statbuf_get_size(struct stat *sbuf);
 
 //判断主动模式是否开启
-static int is_port_active(session_t *);
-//被动模式是否开启
-static int is_pasv_active(session_t *);
+static int is_port_active(Session_t *sess);
+//判断被动模式是否开启
+static int is_pasv_active(Session_t *sess);
+
+static void get_port_data_fd(Session_t *sess);
+static void get_pasv_data_fd(Session_t *sess);
 
 //返回值表示成功与否
-int get_trans_data_fd(session_t *ses)
+int get_trans_data_fd(Session_t *sess)
 {
-   int is_port = is_port_active(ses);
-   int is_pasv = is_pasv_active(ses);
+    int is_port = is_port_active(sess);
+    int is_pasv = is_pasv_active(sess);
 
 
-   //两者都未开启，应返回425
-   if(!is_port && !is_pasv)
-   {
-       ftp_reply(ses, FTP_BADSENDCONN, "Use PORT or PASV first.");
-       return 0;
-   }
+    //两者都未开启，应返回425
+    if(!is_port && !is_pasv)
+    {
+        ftp_reply(sess, FTP_BADSENDCONN, "Use PORT or PASV first.");
+        return 0;
+    }
 
-   if(is_port && is_pasv)
-   {
-       fprintf(stderr, "both of PORT and PASV are active\n");
-       exit(EXIT_FAILURE);
-   }
+    if(is_port && is_pasv)
+    {
+        fprintf(stderr, "both of PORT and PASV are active\n");
+        exit(EXIT_FAILURE);
+    }
 
-   //主动模式
-   if(is_port)
-   {
-       //发送cmd
-       priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_GET_DATA_SOCK);
-       //发送ip port
-       char *ip = inet_ntoa(ses->p_addr->sin_addr);
-       uint16_t port = ntohs(ses->p_addr->sin_port);
-       priv_sock_send_str(ses->proto_fd, ip, strlen(ip));
-       priv_sock_send_int(ses->proto_fd, port);
-       //接收应答
-       char result = priv_sock_recv_result(ses->proto_fd);
+    //主动模式
+    if(is_port)
+    {
+        /*
+        //发送cmd
+       priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK);
+        //发送ip port
+       char *ip = inet_ntoa(sess->p_addr->sin_addr);
+       uint16_t port = ntohs(sess->p_addr->sin_port);
+       priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
+       priv_sock_send_int(sess->proto_fd, port);
+        //接收应答
+       char result = priv_sock_recv_result(sess->proto_fd);
        if(result == PRIV_SOCK_RESULT_BAD)
        {
            fprintf(stderr, "get data fd error\n");
            exit(EXIT_FAILURE);
        }
-       //接收fd
-       ses->data_fd = priv_sock_recv_fd(ses->proto_fd);
+        //接收fd
+       sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
 
-       //释放port模式
-       free(ses->p_addr);
-       ses->p_addr = NULL;
+        //释放port模式
+       free(sess->p_addr);
+       sess->p_addr = NULL;
+       */
+       get_port_data_fd(sess);
    }
 
    if(is_pasv)
    {
-       //先给nobody发命令
-       priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_PASV_ACCEPT);
+    /*
+         //先给nobody发命令
+       priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
 
        //接收结果
-       char res = priv_sock_recv_result(ses->proto_fd);
+       char res = priv_sock_recv_result(sess->proto_fd);
        if(res == PRIV_SOCK_RESULT_BAD)
        {
            fprintf(stderr, "get data fd error\n");
            exit(EXIT_FAILURE);
        }
 
-       //接收fd
-       ses->data_fd = priv_sock_recv_fd(ses->proto_fd);
+        //接收fd
+       sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
+       */
+       get_pasv_data_fd(sess);    
    }
+
    return 1;
 }
 
 /*
  *功能：传输文件列表
  */
-void trans_list(session_t *ses)
-{
+
+ void trans_list(Session_t *sess)
+ {
     DIR *dir = opendir(".");
     if(dir == NULL)
         ERR_EXIT("opendir");
@@ -114,7 +125,7 @@ void trans_list(session_t *ses)
         strcat(buf, statbuf_get_filename(&sbuf, filename));
 
         strcat(buf, "\r\n");
-        writen(ses->data_fd, buf, strlen(buf));
+        writen(sess->data_fd, buf, strlen(buf));
     }
 
     closedir(dir);
@@ -131,28 +142,27 @@ static const char *statbuf_get_perms(struct stat *sbuf)
     switch(mode & S_IFMT)
     {
         case S_IFSOCK:
-            perms[0] = 's';
-            break;
+        perms[0] = 's';
+        break;
         case S_IFLNK:
-            perms[0] = 'l';
-            break;
+        perms[0] = 'l';
+        break;
         case S_IFREG:
-            perms[0] = '-';
-            break;
+        perms[0] = '-';
+        break;
         case S_IFBLK:
-            perms[0] = 'b';
-            break;
+        perms[0] = 'b';
+        break;
         case S_IFDIR:
-            perms[0] = 'd';
-            break;
+        perms[0] = 'd';
+        break;
         case S_IFCHR:
-            perms[0] = 'c';
-            break;
+        perms[0] = 'c';
+        break;
         case S_IFIFO:
-            perms[0] = 'p';
-            break;
+        perms[0] = 'p';
+        break;
     }
-
     //权限
     if(mode & S_IRUSR)
         perms[1] = 'r';
@@ -239,15 +249,58 @@ static const char *statbuf_get_size(struct stat *sbuf)
     return buf;
 }
 
-static int is_port_active(session_t *ses)
+static int is_port_active(Session_t *sess)
 {
-   return (ses->p_addr != NULL);
+    return (sess->p_addr != NULL);
 }
 
-static int is_pasv_active(session_t *ses)
+static int is_pasv_active(Session_t *sess)
 {
     //首先给nobody发命令
-    priv_sock_send_cmd(ses->proto_fd, PRIV_SOCK_PASV_ACTIVE);
+    priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACTIVE);
     //接收结果
-    return priv_sock_recv_int(ses->proto_fd);
+    return priv_sock_recv_int(sess->proto_fd);
+}
+
+static void get_port_data_fd(Session_t *sess)
+{
+ //发送cmd
+   priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK);
+ //发送ip port
+   char *ip = inet_ntoa(sess->p_addr->sin_addr);
+   uint16_t port = ntohs(sess->p_addr->sin_port);
+   priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
+   priv_sock_send_int(sess->proto_fd, port);
+ //接收应答
+   char result = priv_sock_recv_result(sess->proto_fd);
+   if(result == PRIV_SOCK_RESULT_BAD)
+   {
+    ftp_reply(sess, FTP_BADCMD, "get pasv data_fd error");
+    fprintf(stderr, "get data fd error\n");
+    exit(EXIT_FAILURE);
+}
+ //接收fd
+sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
+
+ //释放port模式
+free(sess->p_addr);
+sess->p_addr = NULL;
+}
+
+static void get_pasv_data_fd(Session_t *sess)
+{
+ //先给nobody发命令
+   priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
+
+ //接收结果
+   char res = priv_sock_recv_result(sess->proto_fd);
+   if(res == PRIV_SOCK_RESULT_BAD)
+   {
+    ftp_reply(sess, FTP_BADCMD, "get pasv data_fd error");
+    fprintf(stderr, "get data fd error\n");
+    exit(EXIT_FAILURE);
+}
+
+ //接收fd
+sess->data_fd = priv_sock_recv_fd(sess->proto_fd);
 }

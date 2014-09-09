@@ -4,7 +4,7 @@
 void str_trim_crlf(char *str)
 {
     char *p = &str[strlen(str)-1];
-    while(*p == '\r' || *p == '\n')
+    while (*p == '\r' || *p == '\n')
         *p-- = '\0';
 }
 
@@ -67,4 +67,3 @@ unsigned int str_octal_to_uint(const char *str)
     }
     return result;
 }
-

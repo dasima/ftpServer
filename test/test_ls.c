@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
@@ -9,16 +9,16 @@
 #include <time.h>
 
 #define ERR_EXIT(m) \
-do { \
-    perror(m);\
-    exit(EXIT_FAILURE);\
-}while(0)
+    do { \
+        perror(m);\
+        exit(EXIT_FAILURE);\
+    }while(0)
 
-const char *statbuf_get_perms(struct stat *sbuf);
-const char *statbuf_get_date(struct stat *sbuf);
-const char *statbuf_get_filename(struct stat *sbuf, const char *name);
-const char *statbuf_get_user_info(struct stat *sbuf);
-const char *statbuf_get_size(struct stat *sbuf);
+const char *statbuf_get_perms(struct stat *);
+const char *statbuf_get_date(struct stat *);
+const char *statbuf_get_filename(struct stat *, const char *);
+const char *statbuf_get_user_info(struct stat *);
+const char *statbuf_get_size(struct stat *);
 
 int main(int argc, const char *argv[])
 {
@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
     struct dirent *dr;
     while((dr = readdir(dir)))
     {
-        const char *filename = dr->d_name;
+        const char* filename = dr->d_name;
         if(filename[0] == '.')
             continue;
 
@@ -50,13 +50,14 @@ int main(int argc, const char *argv[])
 
         printf("%s\n", buf);
     }
-
     closedir(dir);
     return 0;
 }
 
+//获取文件类型
 const char *statbuf_get_perms(struct stat *sbuf)
 {
+    //这里使用static返回perms
     static char perms[] = "----------";
     mode_t mode = sbuf->st_mode;
 
@@ -64,26 +65,26 @@ const char *statbuf_get_perms(struct stat *sbuf)
     switch(mode & S_IFMT)
     {
         case S_IFSOCK:
-        perms[0] = 's';
-        break;
+            perms[0] = 's';
+            break;
         case S_IFLNK:
-        perms[0] = 'l';
-        break;
+            perms[0] = 'l';
+            break;
         case S_IFREG:
-        perms[0] = '-';
-        break;
+            perms[0] = '-';
+            break;
         case S_IFBLK:
-        perms[0] = 'b';
-        break;
+            perms[0] = 'b';
+            break;
         case S_IFDIR:
-        perms[0] = 'd';
-        break;
+            perms[0] = 'd';
+            break;
         case S_IFCHR:
-        perms[0] = 'c';
-        break;
+            perms[0] = 'c';
+            break;
         case S_IFIFO:
-        perms[0] = 'p';
-        break;
+            perms[0] = 'p';
+            break;
     }
 
     //权限
@@ -107,15 +108,16 @@ const char *statbuf_get_perms(struct stat *sbuf)
         perms[9] = 'x';
 
     if(mode & S_ISUID)
-       perms[3] = (perms[3] == 'x') ? 's' : 'S';
-   if(mode & S_ISGID)
-       perms[6] = (perms[6] == 'x') ? 's' : 'S';
-   if(mode & S_ISVTX)
-       perms[9] = (perms[9] == 'x') ? 't' : 'T';
+        perms[3] = (perms[3] == 'x') ? 's' : 'S';
+    if(mode & S_ISGID)
+        perms[6] = (perms[6] == 'x') ? 's' : 'S';
+    if(mode & S_ISVTX)
+        perms[9] = (perms[9] == 'x') ? 't' : 'T';
 
-   return perms;
+    return perms;
 }
 
+//获取文件最近更改日期
 const char *statbuf_get_date(struct stat *sbuf)
 {
     static char datebuf[1024] = {0};
@@ -128,6 +130,7 @@ const char *statbuf_get_date(struct stat *sbuf)
 
     if(strftime(datebuf, sizeof datebuf, format, ptm) == 0)
     {
+        //
         fprintf(stderr, "strftime error\n");
         exit(EXIT_FAILURE);
     }
@@ -135,10 +138,11 @@ const char *statbuf_get_date(struct stat *sbuf)
     return datebuf;
 }
 
+//获取文件名字
 const char *statbuf_get_filename(struct stat *sbuf, const char *name)
 {
     static char filename[1024] = {0};
-    //name 处理链接名字
+    //处理链接名字
     if(S_ISLNK(sbuf->st_mode))
     {
         char linkfile[1024] = {0};
@@ -153,6 +157,7 @@ const char *statbuf_get_filename(struct stat *sbuf, const char *name)
     return filename;
 }
 
+//获取用户信息
 const char *statbuf_get_user_info(struct stat *sbuf)
 {
     static char info[1024] = {0};
@@ -161,6 +166,7 @@ const char *statbuf_get_user_info(struct stat *sbuf)
     return info;
 }
 
+//获取文件大小
 const char *statbuf_get_size(struct stat *sbuf)
 {
     static char buf[100] = {0};

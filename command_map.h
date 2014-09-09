@@ -5,40 +5,39 @@
 
 //命令映射相关函数
 
-void do_command_map(session_t *);
-void ftp_reply(session_t *, int, const char *);
-void ftp_lreply(session_t *, int, const char *);
+void do_command_map(Session_t *);
+void ftp_reply(Session_t *, int, const char *);
+void ftp_lreply(Session_t *, int, const char *);
 
-void do_user(session_t *);
-void do_pass(session_t *);
-void do_cwd(session_t *);
-void do_cdup(session_t *);
-void do_quit(session_t *);
-void do_port(session_t *);
-void do_pasv(session_t *);
-void do_type(session_t *);
-void do_stru(session_t *);
-void do_mode(session_t *);
-void do_retr(session_t *);
-void do_stor(session_t *);
-void do_appe(session_t *);
-void do_list(session_t *);
-void do_nlst(session_t *);
-void do_rest(session_t *);
-void do_abor(session_t *);
-void do_pwd(session_t *);
-void do_mkd(session_t *);
-void do_rmd(session_t *);
-void do_dele(session_t *);
-void do_rnfr(session_t *);
-void do_rnto(session_t *);
-void do_site(session_t *);
-void do_syst(session_t *);
-void do_feat(session_t *);
-void do_size(session_t *);
-void do_stat(session_t *);
-void do_noop(session_t *);
-void do_help(session_t *);
-
+void do_user(Session_t *);
+void do_pass(Session_t *);
+void do_cwd(Session_t *);
+void do_cdup(Session_t *);
+void do_quit(Session_t *);
+void do_port(Session_t *);
+void do_pasv(Session_t *);
+void do_type(Session_t *);
+void do_stru(Session_t *);
+void do_mode(Session_t *);
+void do_retr(Session_t *);
+void do_stor(Session_t *);
+void do_appe(Session_t *);
+void do_list(Session_t *);
+void do_nlst(Session_t *);
+void do_rest(Session_t *);
+void do_abor(Session_t *);
+void do_pwd(Session_t *);
+void do_mkd(Session_t *);
+void do_rmd(Session_t *);
+void do_dele(Session_t *);
+void do_rnfr(Session_t *);
+void do_rnto(Session_t *);
+void do_site(Session_t *);
+void do_syst(Session_t *);
+void do_feat(Session_t *);
+void do_size(Session_t *);
+void do_stat(Session_t *);
+void do_noop(Session_t *);
+void do_help(Session_t *);
 
 #endif  /*_COMMAND_MAP_H_*/

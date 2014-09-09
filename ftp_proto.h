@@ -1,12 +1,12 @@
-#ifndef _PROTO_H_
-#define _PROTO_H_ 
+#ifndef _FTP_PROTO_H_
+#define _FTP_PROTO_H_ 
 
 /*
- *子进程
+ * 子进程
  *
  */
 #include "session.h"
 
-void handle_proto(session_t *ses);
+void handle_proto(Session_t *sess);
 
-#endif  /*_PROTO_H_*/
+#endif  /*_FTP_PROTO_H_*/

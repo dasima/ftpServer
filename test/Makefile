@@ -7,6 +7,6 @@ LIB=-lcrypt
 $(BIN):$(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIB)
 %.o:%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ 
 clean:
 	rm -f *.o $(BIN)

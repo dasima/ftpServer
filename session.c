@@ -4,45 +4,46 @@
 #include "ftp_nobody.h"
 #include "priv_sock.h"
 
-void session_init(session_t *ses)
+void session_init(Session_t *sess)
 {
-    memset(ses->command, 0, sizeof(ses->command));
-    memset(ses->com, 0, sizeof(ses->com));
-    memset(ses->args, 0, sizeof(ses->args));
-    ses->peerfd = -1;
-    ses->nobody_fd = -1;
-    ses->proto_fd = -1;
+	memset(sess->command, 0, sizeof (sess->command));
+	memset(sess->com, 0, sizeof (sess->com));
+	memset(sess->args, 0, sizeof (sess->args));
+	sess->peer_fd = -1;
+	sess->nobody_fd = -1;
+	sess->proto_fd = -1;
 
-    ses->user_uid = 0;
-    ses->ascii_mode = 0;
+	sess->user_uid = 0;
+	sess->ascii_mode = 0;
 
-    ses->p_addr = NULL;
-    ses->data_fd = -1;
-    ses->listen_fd = -1;
+	sess->p_addr = NULL;
+	sess->data_fd = -1;
+	sess->listen_fd = -1;
 }
 
-void session_reset_command(session_t *ses)
+void session_reset_command(Session_t *sess)
 {
-    memset(ses->command, 0, sizeof (ses->command));
-    memset(ses->com, 0, sizeof (ses->com));
-    memset(ses->args, 0, sizeof (ses->args));
+	memset(sess->command, 0, sizeof (sess->command));
+	memset(sess->com, 0, sizeof (sess->com));
+	memset(sess->args, 0, sizeof (sess->args));
 }
 
-void session_begin(session_t *ses)
+void session_begin(Session_t *sess)
 {
-    priv_sock_init(ses);
+	priv_sock_init(sess);
 
-    pid_t pid;
-    if((pid = fork()) == -1)
-        ERR_EXIT("fork");
-    else if(pid == 0)
-    {
-        priv_sock_set_proto_context(ses);
-        handle_proto(ses);
-    }
-    else
-    {
-        priv_sock_set_nobody_context(ses);
-        handle_nobody(ses);
-    }
+	pid_t pid;
+	if((pid = fork()) == -1)
+		ERR_EXIT("fork");
+	else if(pid == 0)
+	{
+		priv_sock_set_proto_context(sess);
+		handle_proto(sess);
+	}
+	else
+	{
+		priv_sock_set_nobody_context(sess);
+		handle_nobody(sess);
+	}
+
 }
