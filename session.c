@@ -19,6 +19,9 @@ void session_init(Session_t *sess)
     sess->p_addr = NULL;
     sess->data_fd = -1;
     sess->listen_fd = -1;
+
+    sess->restart_pos = 0;
+    sess->rnfr_name = NULL;
 }
 
 void session_reset_command(Session_t *sess)
