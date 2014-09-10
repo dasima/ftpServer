@@ -3,44 +3,16 @@
 
 static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
+static int lock_file(int fd, int type);
+
 int lock_file_read(int fd)
 {
-    struct flock lock;
-    memset(&lock, 0, sizeof lock);
-    lock.l_type = F_RDLCK;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-    lock.l_pid = getpid();
-
-    int ret;
-    do
-    {
-        ret = fcntl(fd, F_SETLKW, &lock);
-    }
-    while(ret == -1 && errno == EINTR);
-
-    return ret;
+    return lock_file(fd, F_RDLCK);
 }
 
 int lock_file_write(int fd)
 {
-    struct flock lock;
-    memset(&lock, 0, sizeof lock);
-    lock.l_type = F_WRLCK;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-    lock.l_pid = getpid();
-    
-    int ret;
-    do
-    {
-        ret = fcntl(fd, F_SETLKW, &lock);
-    }
-    while(ret == -1 && errno == EINTR);
-    
-    return ret;
+    return lock_file(fd, F_WRLCK);
 }
 
 int unlock_file(int fd)
@@ -54,6 +26,27 @@ int unlock_file(int fd)
     lock.l_pid = getpid();
 
     return fcntl(fd, F_SETLK, &lock);
+}
+
+static int lock_file(int fd, int type)
+{
+    struct flock lock;
+    memset(&lock, 0, sizeof lock);
+    lock.l_type = type;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_pid = getpid();
+
+    int ret;
+    do
+    {
+        ret = fcntl(fd, F_SETLKW, &lock);
+    }
+    while(ret == -1 && errno == EINTR)
+        ;
+    
+    return ret;
 }
 
 /*

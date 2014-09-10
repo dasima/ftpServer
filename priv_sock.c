@@ -29,6 +29,8 @@ void priv_sock_close(Session_t *sess)
 }
 void priv_sock_set_nobody_context(Session_t *sess)
 {
+    close(sess->peer_fd); //关闭控制连接
+
     if(sess->proto_fd != -1)
     {
         close(sess->proto_fd);
