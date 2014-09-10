@@ -481,5 +481,10 @@ void do_noop(Session_t *sess)
 
 void do_help(Session_t *sess)
 {
-
+    ftp_lreply(sess, FTP_HELP, "The following commands are recognized.");
+    writen(sess->peer_fd, " ABOR ACCT ALLO APPE CDUP CWD DELE EPRT EPSV FEAT HELP LIST MDTM MKD\r\n", strlen(" ABOR ACCT ALLO APPE CDUP CWD DELE EPRT EPSV FEAT HELP LIST MDTM MKD\r\n"));
+    writen(sess->peer_fd, " MODE NLST NOOP OPTS PASS PASV PORT PWD QUIT REIN REST RETR RMD RNFR\r\n", strlen(" MODE NLST NOOP OPTS PASS PASV PORT PWD QUIT REIN REST RETR RMD RNFR\r\n"));
+    writen(sess->peer_fd, " RNTO SITE SIZE SMNT STAT STOR STOU STRU SYST TYPE USER XCUP XCWD XMKD\r\n", strlen(" RNTO SITE SIZE SMNT STAT STOR STOU STRU SYST TYPE USER XCUP XCWD XMKD\r\n"));
+    writen(sess->peer_fd, " XPWD XRMD\r\n", strlen(" XPWD XRMD\r\n"));
+    ftp_reply(sess, FTP_HELP, "Help OK.");
 }
