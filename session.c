@@ -24,8 +24,8 @@ void session_init(Session_t *sess)
     sess->restart_pos = 0;
     sess->rnfr_name = NULL;
 
-    sess->limits_max_upload = tunable_upload_max_rate;
-    sess->limits_max_download = tunable_download_max_rate;
+    sess->limits_max_upload = tunable_upload_max_rate * 1024;
+    sess->limits_max_download = tunable_download_max_rate * 1024;
     sess->start_time_sec = 0;
     sess->start_time_usec = 0;
 }
