@@ -161,3 +161,4 @@ static void hash_clear_bucket(Hash_t *hash, unsigned int index)
     }
     hash->nodes[index] = NULL;
 }
+

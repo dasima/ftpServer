@@ -429,7 +429,7 @@ void do_site(Session_t *sess)
     char args[1024] = {0};
     str_split(sess->args, cmd, args, ' ');
     str_upper(cmd);
-    
+
     if(strcmp("CHMOD", cmd))
         do_site_chmod(sess, args);
     else if(strcmp("UMASK", cmd))
@@ -489,13 +489,13 @@ void do_size(Session_t *sess)
 void do_stat(Session_t *sess)
 {
     ftp_lreply(sess, FTP_STATOK, "FTP server status:");
-    
+
     char text[1024] = {0};
     struct in_addr in;
     in.s_addr = sess->ip;
     snprintf(text, sizeof text, " Connected to %s\r\n", inet_ntoa(in));
     writen(sess->peer_fd, text, strlen(text));
-    
+
     snprintf(text, sizeof text, " Logged in as %s\r\n", sess->username);
     writen(sess->peer_fd, text, strlen(text));
     ftp_reply(sess, FTP_STATOK, "End of status");

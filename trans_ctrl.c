@@ -173,53 +173,54 @@ void setup_signal_sigurg()
 
 void do_site_chmod(Session_t *sess, char *args)
 {
-   if (strlen(args) == 0)
-   {
-       ftp_reply(sess, FTP_BADCMD, "SITE CHMOD needs 2 arguments.");
-       return;
-   }
+    if (strlen(args) == 0)
+    {
+        ftp_reply(sess, FTP_BADCMD, "SITE CHMOD needs 2 arguments.");
+        return;
+    }
 
-   char perm[100] = {0};
-   char file[100] = {0};
-   str_split(args , perm, file, ' ');
-   if (strlen(file) == 0)
-   {
-       ftp_reply(sess, FTP_BADCMD, "SITE CHMOD needs 2 arguments.");
-       return;
-   }
+    char perm[100] = {0};
+    char file[100] = {0};
+    str_split(args , perm, file, ' ');
+    if (strlen(file) == 0)
+    {
+        ftp_reply(sess, FTP_BADCMD, "SITE CHMOD needs 2 arguments.");
+        return;
+    }
 
-   unsigned int mode = str_octal_to_uint(perm);
-   if (chmod(file, mode) < 0)
-   {
-       ftp_reply(sess, FTP_CHMODOK, "SITE CHMOD command failed.");
-   }
-   else
-   {
-       ftp_reply(sess, FTP_CHMODOK, "SITE CHMOD command ok.");
-   }
+    unsigned int mode = str_octal_to_uint(perm);
+    if (chmod(file, mode) < 0)
+    {
+        ftp_reply(sess, FTP_CHMODOK, "SITE CHMOD command failed.");
+    }
+    else
+    {
+        ftp_reply(sess, FTP_CHMODOK, "SITE CHMOD command ok.");
+    }
 }
 
 void do_site_umask(Session_t *sess, char *args)
 {
-     // SITE UMASK [umask]
-   if (strlen(args) == 0)
-   {
-       char text[1024] = {0};
-       sprintf(text, "Your current UMASK is 0%o", tunable_local_umask);
-       ftp_reply(sess, FTP_UMASKOK, text);
-   }
-   else
-   {
-       unsigned int um = str_octal_to_uint(args);
-       umask(um);
-       char text[1024] = {0};
-       sprintf(text, "UMASK set to 0%o", um);
-       ftp_reply(sess, FTP_UMASKOK, text);
-   }
+    // SITE UMASK [umask]
+    if (strlen(args) == 0)
+    {
+        char text[1024] = {0};
+        sprintf(text, "Your current UMASK is 0%o", tunable_local_umask);
+        ftp_reply(sess, FTP_UMASKOK, text);
+    }
+    else
+    {
+        unsigned int um = str_octal_to_uint(args);
+        umask(um);
+        char text[1024] = {0};
+        sprintf(text, "UMASK set to 0%o", um);
+        ftp_reply(sess, FTP_UMASKOK, text);
+    }
 }
 
 void do_site_help(Session_t *sess)
 {
-     //214 CHMOD UMASK HELP
-   ftp_reply(sess, FTP_HELP, "CHMOD UMASK HELP");
+    //214 CHMOD UMASK HELP
+    ftp_reply(sess, FTP_HELP, "CHMOD UMASK HELP");
 }
+

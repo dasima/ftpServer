@@ -10,7 +10,7 @@ void session_init(Session_t *sess)
     memset(sess->command, 0, sizeof (sess->command));
     memset(sess->com, 0, sizeof (sess->com));
     memset(sess->args, 0, sizeof (sess->args));
-    
+
     sess->ip = 0;
     memset(sess->username, 0, sizeof(sess->username));
 
@@ -64,5 +64,5 @@ void session_begin(Session_t *sess)
         priv_sock_set_nobody_context(sess);
         handle_nobody(sess);
     }
-
 }
+

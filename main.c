@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
     Session_t sess;
     session_init(&sess);
     p_sess = &sess; //配置全局变量
- 
+
     while(1)
     {
         struct sockaddr_in addr;
@@ -61,3 +61,4 @@ int main(int argc, const char *argv[])
 
     return 0;
 }
+

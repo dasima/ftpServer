@@ -167,3 +167,4 @@ const char *statbuf_get_size(struct stat *sbuf)
     snprintf(buf, sizeof buf, "%8lu", (unsigned long)sbuf->st_size);
     return buf;
 }
+
