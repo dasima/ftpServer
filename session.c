@@ -33,6 +33,7 @@ void session_init(Session_t *sess)
     sess->is_receive_abor = 0;
 
     sess->curr_clients = 0;
+    sess->curr_ip_clients = 0;
 }
 
 void session_reset_command(Session_t *sess)

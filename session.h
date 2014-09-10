@@ -39,6 +39,7 @@ typedef struct
     int is_receive_abor; //是否受到了abor
 
     unsigned int curr_clients; //当前的客户数量
+    unsigned int curr_ip_clients; //当前ip的客户数量
 }Session_t;
 
 //初始化session

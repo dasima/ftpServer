@@ -1,11 +1,13 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
-
+//c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <assert.h>
+//linux
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
