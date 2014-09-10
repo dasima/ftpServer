@@ -176,7 +176,6 @@ void upload_file(Session_t *sess, int is_appe)
 
     //区分模式
     long long offset = sess->restart_pos;
-    unsigned long filesize = 0;
     if(!is_appe && offset == 0) //STOR
     {
         //创建新的文件
@@ -188,28 +187,16 @@ void upload_file(Session_t *sess, int is_appe)
         ftruncate(fd, offset); //截断后面的内容
         if(lseek(fd, offset, SEEK_SET) == -1)
             ERR_EXIT("lseek");
-        filesize = offset;
     }
     else //APPE
     {
         //对文件进行扩展 偏移到末尾进行追加
         if(lseek(fd, 0, SEEK_END) == -1)
             ERR_EXIT("lseek");
-
-        //获取文件大小
-        if(fstat(fd, &sbuf) == -1)
-            ERR_EXIT("fstat");
-        filesize = sbuf.st_size;
     }
 
     //150 ascii
-    //150 Opening ASCII mode data connection for /home/wing/redis-stable.tar.gz (1251318 bytes).
-    char text[1024] = {0};
-    if(sess->ascii_mode == 1)
-        snprintf(text, sizeof text, "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
-    else
-        snprintf(text, sizeof text, "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
-    ftp_reply(sess, FTP_DATACONN, text);
+    ftp_reply(sess, FTP_DATACONN, "OK to send.");
 
     //更新当前时间
     sess->start_time_sec = get_curr_time_sec();
