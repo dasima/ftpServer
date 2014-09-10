@@ -314,7 +314,8 @@ void do_rest(Session_t *sess)
 
 void do_abor(Session_t *sess)
 {
-
+    //225 No transfer to ABOR
+    ftp_reply(sess, FTP_ABOR_NOCONN, "No transfer to ABOR.");
 }
 
 void do_pwd(Session_t *sess)
