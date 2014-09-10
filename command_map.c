@@ -156,6 +156,8 @@ void do_pass(Session_t *sess)
     //umask
     umask(tunable_local_umask);
 
+    strcpy(sess->username, pw->pw_name);
+
     ftp_reply(sess, FTP_LOGINOK, "Login successful.");
 }
 
@@ -471,7 +473,17 @@ void do_size(Session_t *sess)
 
 void do_stat(Session_t *sess)
 {
-
+    ftp_lreply(sess, FTP_STATOK, "FTP server status:");
+   
+    char text[1024] = {0};
+    struct in_addr in;
+    in.s_addr = sess->ip;
+    snprintf(text, sizeof text, " Connected to %s\r\n", inet_ntoa(in));
+    writen(sess->peer_fd, text, strlen(text));
+   
+    snprintf(text, sizeof text, " Logged in as %s\r\n", sess->username);
+    writen(sess->peer_fd, text, strlen(text));
+    ftp_reply(sess, FTP_STATOK, "End of status");
 }
 
 void do_noop(Session_t *sess)

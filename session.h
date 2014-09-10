@@ -14,6 +14,9 @@ typedef struct
     char com[MAX_COMMAND];//FTP指令
     char args[MAX_COMMAND];//FTP指令的参数
 
+    uint32_t ip; //客户端ip地址
+    char username[100]; //用户名
+
     int peer_fd;//客户连接的fd
 
     int nobody_fd;//nobody进程所使用的fd

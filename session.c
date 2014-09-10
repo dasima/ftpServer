@@ -10,6 +10,10 @@ void session_init(Session_t *sess)
     memset(sess->command, 0, sizeof (sess->command));
     memset(sess->com, 0, sizeof (sess->com));
     memset(sess->args, 0, sizeof (sess->args));
+    
+    sess->ip = 0;
+    memset(sess->username, 0, sizeof(sess->username));
+
     sess->peer_fd = -1;
     sess->nobody_fd = -1;
     sess->proto_fd = -1;

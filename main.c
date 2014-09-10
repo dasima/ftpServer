@@ -36,6 +36,7 @@ int main(int argc, const char *argv[])
 
         //获取ip地址，并在hash中添加一条记录
         uint32_t ip = addr.sin_addr.s_addr;
+        sess.ip = ip;
         add_clients_to_hash(&sess, ip);
 
         if((pid = fork()) == -1)
