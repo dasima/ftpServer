@@ -5,8 +5,22 @@ static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
 static int lock_file(int fd, int type);
 
-
 static struct timeval tv = {0, 0}; //全局变量
+
+//设置socket的选项，使其接收带外数据
+void activate_oobinline(int sockfd)
+{
+   int oob_inline = 1;
+   if(setsockopt(sockfd, SOL_SOCKET, SO_OOBINLINE, &oob_inline, sizeof(oob_inline)) == -1)
+       ERR_EXIT("setsockopt oobinline");
+}
+
+//开启SIGURG信号，当有带外数据到来时，发出该信号
+void activate_signal_sigurg(int sockfd)
+{
+   if(fcntl(sockfd, F_SETOWN, getpid()) == -1)
+       ERR_EXIT("fcntl sigurg");
+}
 
 int get_curr_time_sec()
 {

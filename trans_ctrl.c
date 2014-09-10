@@ -4,11 +4,12 @@
 #include "configure.h"
 #include "command_map.h"
 #include "ftp_codes.h"
+#include "strutil.h"
 Session_t *p_sess = NULL;
 
 static void handle_signal_alarm_ctrl_fd(int sig);
 static void handle_signal_alarm_data_fd(int sig);
-
+static void handle_signal_sigurg(int sig);
 
 //限速功能
 void limit_curr_rate(Session_t *sess, int nbytes, int is_upload)
@@ -137,3 +138,33 @@ void cancel_signal_alarm()
 {
 	alarm(0);
 }
+
+//处理SIGURG信号，实质是处理带外数据
+static void handle_signal_sigurg(int sig)
+{
+	char cmdline[1024] = {0};
+	int ret = readline(p_sess->peer_fd, cmdline, sizeof cmdline);
+ 	if(ret <= 0) //存在带外数据，不可能为0
+ 		ERR_EXIT("readline");
+
+ 	str_trim_crlf(cmdline);
+ 	str_upper(cmdline);
+
+ 	if(strcmp("ABOR", cmdline) == 0 || strcmp("\377\364\377\362ABOR", cmdline) == 0)
+ 	{
+ 		//处理abor指令
+ 		p_sess->is_receive_abor = 1;
+ 	}
+ 	else
+ 	{
+ 		//未识别的命令
+ 		ftp_reply(p_sess, FTP_BADCMD, "Unknown command.");
+ 	}
+ }
+
+//安装sigurg信号
+ void setup_signal_sigurg()
+ {
+ 	if(signal(SIGURG, handle_signal_sigurg) == SIG_ERR)
+ 		ERR_EXIT("signal");
+ }

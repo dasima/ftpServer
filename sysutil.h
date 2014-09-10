@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+void activate_oobinline(int sockfd);
+void activate_signal_sigurg(int sockfd);
+
 int get_curr_time_sec();
 int get_curr_time_usec();
 int nano_sleep(double t);

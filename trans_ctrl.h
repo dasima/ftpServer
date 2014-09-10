@@ -18,4 +18,6 @@ void start_signal_alarm_data_fd();
 
 void cancel_signal_alarm();
 
+void setup_signal_sigurg();
+
 #endif  /*_TRANS_CTRL_H_*/

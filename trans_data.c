@@ -95,6 +95,16 @@ void download_file(Session_t *sess)
     {
         block_size = (nleft > kSize) ? kSize : nleft;
         int nwrite = sendfile(sess->data_fd, fd, NULL, block_size);
+
+        if(sess->is_receive_abor == 1)
+        {
+            flag = 2; //ABOR
+            //426
+            ftp_reply(sess, FTP_BADSENDNET, "Interupt downloading file.");
+            sess->is_receive_abor = 0;
+            break;
+        }
+
         if(nwrite == -1)
         {
             flag = 1; //错误
@@ -120,6 +130,8 @@ void download_file(Session_t *sess)
         ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
     else if(flag == 1)
         ftp_reply(sess, FTP_BADSENDFILE, "Sendfile failed.");
+    else if(flag == 2)
+        ftp_reply(sess, FTP_ABOROK, "ABOR successful.");
 
     //先恢复控制连接的信号
     setup_signal_alarm_ctrl_fd();
@@ -209,6 +221,16 @@ void upload_file(Session_t *sess, int is_appe)
     while(1)
     {
         int nread = read(sess->data_fd, buf, sizeof buf);
+
+        if(sess->is_receive_abor == 1)
+        {
+            flag = 3; //ABOR
+            //426
+            ftp_reply(sess, FTP_BADSENDNET, "Interupt uploading file.");
+            sess->is_receive_abor = 0;
+            break;
+        }
+
         if(nread == -1)
         {
             if(errno == EINTR)
@@ -245,8 +267,10 @@ void upload_file(Session_t *sess, int is_appe)
         ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
     else if(flag == 1)
         ftp_reply(sess, FTP_BADSENDNET, "Reading from Network Failed.");
-    else
+    else if(flag == 2)
         ftp_reply(sess, FTP_BADSENDFILE, "Writing to File Failed.");
+    else
+        ftp_reply(sess, FTP_ABOROK, "ABOR successful.");
 
     //先恢复控制连接的信号
     setup_signal_alarm_ctrl_fd();
