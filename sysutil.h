@@ -4,6 +4,7 @@
 #include "common.h"
 
 int lock_file_read(int fd);
+int lock_file_write(int fd);
 int unlock_file(int fd);
 
 //创建客户fd

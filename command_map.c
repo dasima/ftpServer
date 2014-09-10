@@ -311,18 +311,29 @@ void do_retr(Session_t *sess)
         return;
     }
 
+    //判断断点续传
+    unsigned long filesize = sbuf.st_size;//剩余的文件字节
+    int offset = sess->restart_pos;
+    if(offset != 0)
+    {
+        filesize -= offset;
+    }
+   
+    if(lseek(fd, offset, SEEK_SET) == -1)
+    ERR_EXIT("lseek");
+
     //150 ascii
     //150 Opening ASCII mode data connection for /home/wing/redis-stable.tar.gz (1251318 bytes).
     char text[1024] = {0};
     if(sess->ascii_mode == 1)
-        snprintf(text, sizeof text, "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+        snprintf(text, sizeof text, "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
     else
-        snprintf(text, sizeof text, "Opening Binary mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+        snprintf(text, sizeof text, "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
     ftp_reply(sess, FTP_DATACONN, text);
 
     //传输
     int flag = 0; //记录下载的结果
-    int nleft = sbuf.st_size; //剩余字节数
+    int nleft = filesize; //剩余字节数
     int block_size = 0; //一次传输的字节数
     const int kSize = 4096;
     while(nleft > 0)
@@ -355,12 +366,12 @@ void do_retr(Session_t *sess)
 
 void do_stor(Session_t *sess)
 {
-
+    upload_file(sess, 0);
 }
 
 void do_appe(Session_t *sess)
 {
-
+    upload_file(sess, 1);
 }
 
 void do_list(Session_t *sess)
