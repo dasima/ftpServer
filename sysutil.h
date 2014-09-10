@@ -3,6 +3,10 @@
 
 #include "common.h"
 
+int get_curr_time_sec();
+int get_curr_time_usec();
+int nano_sleep(double t);
+
 int lock_file_read(int fd);
 int lock_file_write(int fd);
 int unlock_file(int fd);

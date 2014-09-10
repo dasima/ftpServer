@@ -27,6 +27,7 @@
 #include <sys/syscall.h>
 #include <bits/syscall.h>
 #include <sys/sendfile.h>
+#include <sys/time.h>
 
 #define ERR_EXIT(m) \
     do { \

@@ -23,6 +23,8 @@ static void get_pasv_data_fd(Session_t *sess);
 
 static void trans_list_common(Session_t *sess, int list);
 
+static void limit_curr_rate(Session_t *sess, int nbytes, int is_upload);
+
 void download_file(Session_t *sess)
 {
     //获取data_fd
@@ -77,11 +79,15 @@ void download_file(Session_t *sess)
         snprintf(text, sizeof text, "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
     ftp_reply(sess, FTP_DATACONN, text);
 
+    //记录时间
+    sess->start_time_sec = get_curr_time_sec();
+    sess->start_time_usec = get_curr_time_usec();
+
     //传输
     int flag = 0; //记录下载的结果
     int nleft = filesize; //剩余字节数
     int block_size = 0; //一次传输的字节数
-    const int kSize = 4096;
+    const int kSize = 65536;
     while(nleft > 0)
     {
         block_size = (nleft > kSize) ? kSize : nleft;
@@ -92,22 +98,25 @@ void download_file(Session_t *sess)
             break;
         }
         nleft -= nwrite;
+
+        //实行限速
+        limit_curr_rate(sess, nwrite, 0);
     }
     if(nleft == 0)
-    flag = 0; //正确退出
+        flag = 0; //正确退出
 
     //清理 关闭fd 文件解锁
-if(unlock_file(fd) == -1)
-    ERR_EXIT("unlock_file");
-close(fd);
-close(sess->data_fd);
-sess->data_fd = -1;
+    if(unlock_file(fd) == -1)
+        ERR_EXIT("unlock_file");
+    close(fd);
+    close(sess->data_fd);
+    sess->data_fd = -1;
 
     //226
-if(flag == 0)
-    ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
-else if(flag == 1)
-    ftp_reply(sess, FTP_BADSENDFILE, "Sendfile failed.");
+    if(flag == 0)
+        ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+    else if(flag == 1)
+        ftp_reply(sess, FTP_BADSENDFILE, "Sendfile failed.");
 }
 
 void upload_file(Session_t *sess, int is_appe)
@@ -290,26 +299,26 @@ static const char *statbuf_get_perms(struct stat *sbuf)
     switch(mode & S_IFMT)
     {
         case S_IFSOCK:
-        perms[0] = 's';
-        break;
+            perms[0] = 's';
+            break;
         case S_IFLNK:
-        perms[0] = 'l';
-        break;
+            perms[0] = 'l';
+            break;
         case S_IFREG:
-        perms[0] = '-';
-        break;
+            perms[0] = '-';
+            break;
         case S_IFBLK:
-        perms[0] = 'b';
-        break;
+            perms[0] = 'b';
+            break;
         case S_IFDIR:
-        perms[0] = 'd';
-        break;
+            perms[0] = 'd';
+            break;
         case S_IFCHR:
-        perms[0] = 'c';
-        break;
+            perms[0] = 'c';
+            break;
         case S_IFIFO:
-        perms[0] = 'p';
-        break;
+            perms[0] = 'p';
+            break;
     }
     //权限
     if(mode & S_IRUSR)
@@ -495,3 +504,63 @@ static void trans_list_common(Session_t *sess, int list)
 
     closedir(dir);
 }
+
+static void limit_curr_rate(Session_t *sess, int nbytes, int is_upload)
+{
+    //获取当前时间
+    int curr_time_sec = get_curr_time_sec();
+    int curr_time_usec = get_curr_time_usec();
+
+    //求时间差
+    double elapsed = 0.0;
+    elapsed += (curr_time_sec - sess->start_time_sec);
+    elapsed += (curr_time_usec - sess->start_time_usec) / (double)1000000;
+    if(elapsed < 0.000001) //double和0不能用==
+        elapsed = 0.001;
+
+    //求速度
+    double curr_rate = nbytes / elapsed;
+
+    //求比率
+    double rate_radio = 0.0;
+    if(is_upload)
+    {
+        //如果用户配置了限速，并且当前速度已经超过了限定速度
+        if(sess->limits_max_upload > 0 && curr_rate > sess->limits_max_upload)
+        {
+            rate_radio = curr_rate / (sess->limits_max_upload);
+        }
+        else
+        {
+            //如果不限速，必须更新时间
+            sess->start_time_sec = get_curr_time_sec();
+            sess->start_time_usec = get_curr_time_usec();
+            return;
+        }
+    }else
+    {
+        if(sess->limits_max_download > 0 && curr_rate > sess->limits_max_download)
+        {
+            rate_radio = curr_rate / (sess->limits_max_download);
+        }
+        else
+        {
+            //如果不限速，必须更新时间
+            sess->start_time_sec = get_curr_time_sec();
+            sess->start_time_usec = get_curr_time_usec();
+            return;
+        }
+    }
+
+    //求出限速时间
+    double sleep_time = (rate_radio - 1) * elapsed;
+
+    //限速睡眠
+    if(nano_sleep(sleep_time) == -1)
+        ERR_EXIT("nano_sleep");
+
+    //注意更新当前时间
+    sess->start_time_sec = get_curr_time_sec();
+    sess->start_time_usec = get_curr_time_usec();
+}
+

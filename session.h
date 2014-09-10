@@ -28,6 +28,12 @@ typedef struct
 
     long long restart_pos; //文件传输断点
     char *rnfr_name; //文件重命名 RNTR RNTO
+
+
+    int limits_max_upload; //限定的最大上传速度
+    int limits_max_download; //限定的最大下载速度
+    int start_time_sec; //开始的秒数
+    int start_time_usec; //开始的微秒数
 }Session_t;
 
 //初始化session

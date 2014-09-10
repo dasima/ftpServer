@@ -3,6 +3,7 @@
 #include "ftp_proto.h"
 #include "ftp_nobody.h"
 #include "priv_sock.h"
+#include "configure.h"
 
 void session_init(Session_t *sess)
 {
@@ -22,6 +23,11 @@ void session_init(Session_t *sess)
 
     sess->restart_pos = 0;
     sess->rnfr_name = NULL;
+
+    sess->limits_max_upload = tunable_upload_max_rate;
+    sess->limits_max_download = tunable_download_max_rate;
+    sess->start_time_sec = 0;
+    sess->start_time_usec = 0;
 }
 
 void session_reset_command(Session_t *sess)

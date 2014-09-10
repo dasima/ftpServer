@@ -5,6 +5,41 @@ static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
 static int lock_file(int fd, int type);
 
+
+static struct timeval tv = {0, 0}; //全局变量
+
+int get_curr_time_sec()
+{
+    if(gettimeofday(&tv, NULL) == -1)
+        ERR_EXIT("gettimeofday");
+    return tv.tv_sec;
+}
+
+int get_curr_time_usec()
+{
+    return tv.tv_usec;
+}
+
+int nano_sleep(double t)
+{
+    int sec = (time_t)t;//取整数部分
+    int nsec = (t - sec) * 1000000000;
+    //int nanosleep(const struct timespec *req, struct timespec *rem);
+    struct timespec ts;
+    ts.tv_sec = sec;
+    ts.tv_nsec = nsec;
+
+    int ret;
+    do
+    {//当睡眠被打断时，剩余时间放到ts里面
+        ret = nanosleep(&ts, &ts);
+    }
+    while(ret == -1 && errno == EINTR)
+        ;
+
+    return ret;
+}
+
 int lock_file_read(int fd)
 {
     return lock_file(fd, F_RDLCK);
@@ -45,7 +80,7 @@ static int lock_file(int fd, int type)
     }
     while(ret == -1 && errno == EINTR)
         ;
-    
+
     return ret;
 }
 
