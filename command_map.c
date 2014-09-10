@@ -168,6 +168,7 @@ void do_cwd(Session_t *sess)
         ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
         return;
     }
+
     //250 Directory successfully changed.
     ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
@@ -180,6 +181,7 @@ void do_cdup(Session_t *sess)
         ftp_reply(sess, FTP_FILEFAIL, "Failed to change directory.");
         return;
     }
+
     //250 Directory successfully changed.
     ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }
@@ -196,6 +198,7 @@ void do_port(Session_t *sess)
     //PORT 192,168,44,1,200,174
     unsigned int v[6] = {0};
     sscanf(sess->args, "%u,%u,%u,%u,%u,%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
+    
     sess->p_addr = (struct sockaddr_in *)malloc(sizeof (struct sockaddr_in));
     memset(sess->p_addr, 0, sizeof(struct sockaddr_in));
     sess->p_addr->sin_family = AF_INET;
@@ -230,12 +233,15 @@ void do_pasv(Session_t *sess)
     //接收port
     uint16_t port = priv_sock_recv_int(sess->proto_fd);
 
+
     //227 Entering Passive Mode (192,168,44,136,194,6).
     unsigned int v[6];
     sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
     uint16_t net_endian_port = htons(port); //网络字节序
     unsigned char *p = (unsigned char*)&net_endian_port;
+    v[4] = p[0];
     v[5] = p[1];
+
     char text[1024] = {0};
     snprintf(text, sizeof text, "Entering Passive Mode (%u,%u,%u,%u,%u,%u).", v[0], v[1], v[2], v[3], v[4], v[5]);
 
@@ -273,7 +279,88 @@ void do_mode(Session_t *sess)
 
 void do_retr(Session_t *sess)
 {
+    //获取data_fd
+    if(get_trans_data_fd(sess) == 0)
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "Failed to open file.");
+        return;
+    }
 
+    //open 文件
+    int fd = open(sess->args, O_RDONLY);
+    if(fd == -1)
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "Failed to open file.");
+        return;
+    }
+
+    //对文件加锁
+    if(lock_file_read(fd) == -1)
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "Failed to open file.");
+        return;
+    }
+
+    //判断是否是普通文件
+    struct stat sbuf;
+    if(fstat(fd, &sbuf) == -1)
+        ERR_EXIT("fstat");
+    if(!S_ISREG(sbuf.st_mode))
+    {
+        ftp_reply(sess, FTP_FILEFAIL, "Can only download regular file.");
+        return;
+    }
+
+    //150 ascii
+    //150 Opening ASCII mode data connection for /home/wing/redis-stable.tar.gz (1251318 bytes).
+    char text[1024] = {0};
+    if(sess->ascii_mode == 1)
+        snprintf(text, sizeof text, "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+    else
+        snprintf(text, sizeof text, "Opening Binary mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+    ftp_reply(sess, FTP_DATACONN, text);
+
+    //传输
+    char buf[4096] = {0};
+    int flag = 0; //记录下载的结果
+    while(1)
+    {
+        int ret = read(fd, buf, sizeof buf);
+        if(ret == -1)
+        {
+            if(errno == EINTR)
+                continue;
+             flag = 1; //读取文件错误
+    break;
+            }
+
+if(ret == 0)
+{
+    flag = 0; //传输正常结束
+    break;
+}
+
+if(writen(sess->data_fd, buf, ret) != ret)
+{
+    flag = 2; //网络错误
+    break;
+}
+}
+
+    //清理 关闭fd 文件解锁
+if(unlock_file(fd) == -1)
+    ERR_EXIT("unlock_file");
+close(fd);
+close(sess->data_fd);
+sess->data_fd = -1;
+
+    //226
+if(flag == 0)
+    ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+else if(flag == 1)
+    ftp_reply(sess, FTP_FILEFAIL, "Reading file failed.");
+else
+    ftp_reply(sess, FTP_FILEFAIL, "Network writing failed.");
 }
 
 void do_stor(Session_t *sess)
@@ -319,7 +406,6 @@ void do_pwd(Session_t *sess)
         //return值为-1/0，函数进入系统内核，
         //返回值判断用perror
         //返回值为NULL,不用perror，fprintf(stderr, "a");
-
         fprintf(stderr, "get cwd error\n");
         ftp_reply(sess, FTP_BADMODE, "error");
         return;
@@ -350,6 +436,7 @@ void do_mkd(Session_t *sess)
         }
         snprintf(text, sizeof text, "%s/%s created.", tmp, sess->args);
     }
+
     ftp_reply(sess, FTP_MKDIROK, text);
 }
 
@@ -406,6 +493,7 @@ void do_rnto(Session_t *sess)
     }
     free(sess->rnfr_name);
     sess->rnfr_name = NULL;
+
     //250 Rename successful.
     ftp_reply(sess, FTP_RENAMEOK, "Rename successful.");
 }
@@ -454,6 +542,7 @@ void do_size(Session_t *sess)
         ftp_reply(sess, FTP_FILEFAIL, "SIZE operation failed.");
         return;
     }
+
     //213 6
     char text[1024] = {0};
     snprintf(text, sizeof text, "%lu", sbuf.st_size);

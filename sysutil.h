@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+int lock_file_read(int fd);
+int unlock_file(int fd);
 
 //创建客户fd
 int tcp_client(unsigned int port);
