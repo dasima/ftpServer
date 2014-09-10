@@ -198,7 +198,7 @@ void do_port(Session_t *sess)
     //PORT 192,168,44,1,200,174
     unsigned int v[6] = {0};
     sscanf(sess->args, "%u,%u,%u,%u,%u,%u", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
-    
+
     sess->p_addr = (struct sockaddr_in *)malloc(sizeof (struct sockaddr_in));
     memset(sess->p_addr, 0, sizeof(struct sockaddr_in));
     sess->p_addr->sin_family = AF_INET;
@@ -321,46 +321,36 @@ void do_retr(Session_t *sess)
     ftp_reply(sess, FTP_DATACONN, text);
 
     //传输
-    char buf[4096] = {0};
     int flag = 0; //记录下载的结果
-    while(1)
-    {
-        int ret = read(fd, buf, sizeof buf);
-        if(ret == -1)
+    int nleft = sbuf.st_size; //剩余字节数
+    int block_size = 0; //一次传输的字节数
+    const int kSize = 4096;
+    while(nleft > 0)
+    {//每次读取4096字节的数据，直到剩余数据不足4096，读取剩余的数据
+        block_size = (nleft > kSize) ? kSize : nleft;
+        int nwrite = sendfile(sess->data_fd, fd, NULL, block_size);
+        if(nwrite == -1)
         {
-            if(errno == EINTR)
-                continue;
-             flag = 1; //读取文件错误
-    break;
-            }
-
-if(ret == 0)
-{
-    flag = 0; //传输正常结束
-    break;
-}
-
-if(writen(sess->data_fd, buf, ret) != ret)
-{
-    flag = 2; //网络错误
-    break;
-}
-}
+            flag = 1; //读取文件错误
+            break;
+        }
+        nleft -= nleft;
+    }
+    if(nleft == 0)
+        flag = 0; //正确退出
 
     //清理 关闭fd 文件解锁
-if(unlock_file(fd) == -1)
-    ERR_EXIT("unlock_file");
-close(fd);
-close(sess->data_fd);
-sess->data_fd = -1;
+    if(unlock_file(fd) == -1)
+        ERR_EXIT("unlock_file");
+    close(fd);
+    close(sess->data_fd);
+    sess->data_fd = -1;
 
     //226
-if(flag == 0)
-    ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
-else if(flag == 1)
-    ftp_reply(sess, FTP_FILEFAIL, "Reading file failed.");
-else
-    ftp_reply(sess, FTP_FILEFAIL, "Network writing failed.");
+    if(flag == 0)
+        ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+    else if(flag == 1)
+        ftp_reply(sess, FTP_BADSENDFILE, "Sendfile failed.");
 }
 
 void do_stor(Session_t *sess)

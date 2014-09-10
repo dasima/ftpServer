@@ -5,35 +5,35 @@ static ssize_t recv_peek(int sockfd, void *buf, size_t len);
 
 int lock_file_read(int fd)
 {
-   struct flock lock;
-   memset(&lock, 0, sizeof lock);
-   lock.l_type = F_RDLCK;
-   lock.l_whence = SEEK_SET;
-   lock.l_start = 0;
-   lock.l_len = 0;
-   lock.l_pid = getpid();
-   
-   int ret;
-   do
-   {
-       ret = fcntl(fd, F_SETLKW, &lock);
-   }
-   while(ret == -1 && errno == EINTR);
-   
-   return ret;
+    struct flock lock;
+    memset(&lock, 0, sizeof lock);
+    lock.l_type = F_RDLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_pid = getpid();
+
+    int ret;
+    do
+    {
+        ret = fcntl(fd, F_SETLKW, &lock);
+    }
+    while(ret == -1 && errno == EINTR);
+
+    return ret;
 }
 
 int unlock_file(int fd)
 {
-   struct flock lock;
-   memset(&lock, 0, sizeof lock);
-   lock.l_type = F_UNLCK;
-   lock.l_whence = SEEK_SET;
-   lock.l_start = 0;
-   lock.l_len = 0;
-   lock.l_pid = getpid();
-   
-   return fcntl(fd, F_SETLK, &lock);
+    struct flock lock;
+    memset(&lock, 0, sizeof lock);
+    lock.l_type = F_UNLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_pid = getpid();
+
+    return fcntl(fd, F_SETLK, &lock);
 }
 
 /*
@@ -41,8 +41,8 @@ int unlock_file(int fd)
  *参数port: 端口号 
  *函数返回值：返回客户端套接字 
  */
- int tcp_client(unsigned int port)
- {
+int tcp_client(unsigned int port)
+{
     int sockfd;
     if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
         ERR_EXIT("socket");
@@ -74,8 +74,8 @@ int unlock_file(int fd)
  *参数port：服务器端口
  *函数返回值：成功则返回监听套接字
  */
- int tcp_server(const char *host, unsigned short port)
- {
+int tcp_server(const char *host, unsigned short port)
+{
     //建立套接字
     int listenfd;
     if((listenfd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
@@ -90,17 +90,17 @@ int unlock_file(int fd)
          *转化为二进制形式
          *并存放到in_addr结构体中，sin_addr是in_addr类型的结构体
          */
-         if(inet_aton(host, &seraddr.sin_addr) == 0)
-         {
+        if(inet_aton(host, &seraddr.sin_addr) == 0)
+        {
             /*
              *gethostbyname返回一个hostent结构体类型
              *并将host拷贝到hostent结构体下的h_name中，
              *以及host的in_addr结构体类型内容拷贝到返回值中hostent结构体类型的h_addr_list[0]中
              *其中#define h_addr h_addr_list[0]
              */
-             struct hostent *hp;
-             hp = gethostbyname(host);
-             if(hp == NULL)
+            struct hostent *hp;
+            hp = gethostbyname(host);
+            if(hp == NULL)
                 ERR_EXIT("gethostbyname");
             seraddr.sin_addr = *(struct in_addr*)hp->h_addr;
         }
@@ -131,8 +131,8 @@ int unlock_file(int fd)
  *ip：
  *返回值：
  */
- int get_local_ip(char *ip)
- {
+int get_local_ip(char *ip)
+{
     int sockfd; 
     if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
     {
@@ -157,8 +157,8 @@ int unlock_file(int fd)
  *功能：设置I/O为非阻塞模式
  *fd：文件描述符
  */
- void activate_nonblock(int fd)
- {
+void activate_nonblock(int fd)
+{
     int ret;
     int flags = fcntl(fd, F_GETFL);
     if(flags == -1)
@@ -174,8 +174,8 @@ int unlock_file(int fd)
  *功能：设置I/O为阻塞模式
  *fd：文件描述符
  */
- void deactivate_nonblock(int fd)
- {
+void deactivate_nonblock(int fd)
+{
     int ret;
     int flags = fcntl(fd, F_GETFL);
     if(flags == -1)
@@ -193,8 +193,8 @@ int unlock_file(int fd)
  *wait_seconds：等待超时时间(s),如果为0表示不检测超时
  *返回值：成功返回0，失败返回-1，超时返回-1，且errno = ETIMEDOUT
  */
- int read_timeout(int fd, unsigned int wait_seconds)
- {
+int read_timeout(int fd, unsigned int wait_seconds)
+{
     int ret;
     if(wait_seconds > 0)
     {
@@ -228,8 +228,8 @@ int unlock_file(int fd)
  *wait_seconds：等待超时时间(秒)，如果为0表示不检测超时
  *返回值：成功返回0，失败返回-1，超时返回-1，且errno = ETIMEDOUT
  */
- int write_timeout(int fd, unsigned int wait_seconds)
- {
+int write_timeout(int fd, unsigned int wait_seconds)
+{
     int ret;
     if(wait_seconds > 0)
     {
@@ -264,8 +264,8 @@ int unlock_file(int fd)
  *wait_seconds:等待超时时间，0表示正常不带有超时功能
  *返回值：成功(未超时)返回已连接套接字，超时返回-1，并且errno = ETIMEDOUT
  */
- int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
- {
+int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
+{
     int ret;
     socklen_t addrlen = sizeof(struct sockaddr_in);
     if(wait_seconds > 0)
@@ -307,8 +307,8 @@ int unlock_file(int fd)
  *返回值：成功(未超时)返回0， 失败返回-1， 超时返回-1并且errno = ETIMEDOUT
  */
 //???????????????
- int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
- {
+int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
+{
     int ret;
     socklen_t addrlen = sizeof(struct sockaddr_in);
 
@@ -348,11 +348,11 @@ int unlock_file(int fd)
              *可能有两种情况：一种是连接建立成功，一种是套接字产生错误
              *此时错误信息不会保存至errno变量中，因此，需要调用getsockopt来获取
              */
-             int err;
-             socklen_t socklen = sizeof(err);
-             int sockoptret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &socklen);
-             if(sockoptret == -1)
-             {
+            int err;
+            socklen_t socklen = sizeof(err);
+            int sockoptret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &socklen);
+            if(sockoptret == -1)
+            {
                 return -1;
             }
             //else if(err == 0)
@@ -381,8 +381,8 @@ int unlock_file(int fd)
  *n:要读取的字节数
  *返回值：成功返回n,失败返回-1，读到EOF返回小于n的值
  */
- ssize_t readn(int fd, void *buf, size_t n)
- {
+ssize_t readn(int fd, void *buf, size_t n)
+{
     size_t nleft = n;
     ssize_t nread;
     char *bufp = (char*)buf;
@@ -411,8 +411,8 @@ int unlock_file(int fd)
  *n:要发送的字节数
  *返回值：成功返回n,失败返回-1
  */
- ssize_t writen(int fd, const void *buf, size_t n)
- {
+ssize_t writen(int fd, const void *buf, size_t n)
+{
     size_t nleft = n;
     ssize_t nwrite;
     char *bufp = (char*)buf;
@@ -441,8 +441,8 @@ int unlock_file(int fd)
  *len: 接受字节数长度
  *返回值：成功一个返回大于零（即从recv获得的字节数）的值，失败返回-1
  */
- static ssize_t recv_peek(int sockfd, void *buf, size_t len)
- {
+static ssize_t recv_peek(int sockfd, void *buf, size_t len)
+{
     int nread;
     while (1)
     {
@@ -469,8 +469,8 @@ int unlock_file(int fd)
  *maxsize: 一行的最大长度
  *返回值：成功返回大于等于零的值， 失败返回-1
  */
- ssize_t readline(int sockfd, void *buf, size_t maxsize)
- {
+ssize_t readline(int sockfd, void *buf, size_t maxsize)
+{
     int nread;  //一次IO读取的数量
     int nleft;  //还剩余的字节数
     char *ptr;  //存放数据的指针的位置
@@ -527,8 +527,8 @@ int unlock_file(int fd)
  *sockfd:
  *fd:
  */
- void send_fd(int sockfd, int fd)
- {
+void send_fd(int sockfd, int fd)
+{
     int ret;
     struct msghdr msg;
     struct cmsghdr *p_cmsg;
@@ -563,8 +563,8 @@ int unlock_file(int fd)
  *sockfd:
  *返回值：
  */
- int recv_fd(const int sockfd)
- {
+int recv_fd(const int sockfd)
+{
     int ret;
     struct msghdr msg;
     char recvchar;
@@ -598,5 +598,5 @@ int unlock_file(int fd)
     if(recvfd == -1)
         ERR_EXIT("no [assed fd");
 
-            return recvfd;    
-        }
+    return recvfd;    
+}
