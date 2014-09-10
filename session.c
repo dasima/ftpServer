@@ -28,6 +28,8 @@ void session_init(Session_t *sess)
     sess->limits_max_download = tunable_download_max_rate * 1024;
     sess->start_time_sec = 0;
     sess->start_time_usec = 0;
+
+    sess->is_translating_data = 0;
 }
 
 void session_reset_command(Session_t *sess)

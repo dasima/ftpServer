@@ -34,6 +34,8 @@ typedef struct
     int limits_max_download; //限定的最大下载速度
     int start_time_sec; //开始的秒数
     int start_time_usec; //开始的微秒数
+
+    int is_translating_data; //是否在传输数据
 }Session_t;
 
 //初始化session

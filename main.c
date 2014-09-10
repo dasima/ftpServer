@@ -4,6 +4,8 @@
 #include "configure.h"
 #include "parse_conf.h"
 
+extern Session_t *p_sess;
+
 void print_conf();
 
 int main(int argc, const char *argv[])
@@ -28,6 +30,7 @@ int main(int argc, const char *argv[])
     pid_t pid;
     Session_t sess;
     session_init(&sess);
+    p_sess = &sess; //配置全局变量
     while(1)
     {
         int peerfd = accept_timeout(listenfd, NULL, tunable_accept_timeout);

@@ -27,6 +27,9 @@ static int get_trans_data_fd(Session_t *sess);
 
 void download_file(Session_t *sess)
 {
+    //进入数据传输阶段
+    sess->is_translating_data = 1;
+
     //获取data_fd
     if(get_trans_data_fd(sess) == 0)
     {
@@ -117,10 +120,16 @@ void download_file(Session_t *sess)
         ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
     else if(flag == 1)
         ftp_reply(sess, FTP_BADSENDFILE, "Sendfile failed.");
+
+    //先恢复控制连接的信号
+    setup_signal_alarm_ctrl_fd();
+    sess->is_translating_data = 0;    
 }
 
 void upload_file(Session_t *sess, int is_appe)
 {
+    //进入数据传输阶段
+    sess->is_translating_data = 1;
     //获取data fd
     if(get_trans_data_fd(sess) == 0)
     {
@@ -239,6 +248,9 @@ void upload_file(Session_t *sess, int is_appe)
     else
         ftp_reply(sess, FTP_BADSENDFILE, "Writing to File Failed.");
 
+    //先恢复控制连接的信号
+    setup_signal_alarm_ctrl_fd();
+    sess->is_translating_data = 0;
 }
 
 void trans_list(Session_t *sess, int list)
@@ -292,6 +304,12 @@ static int get_trans_data_fd(Session_t *sess)
     {
         get_pasv_data_fd(sess);    
     }
+
+    //这里获取data fd成功
+    //安装信号
+    setup_signal_alarm_data_fd();
+    //开始计时
+    start_signal_alarm_data_fd();
 
     return 1;
 }

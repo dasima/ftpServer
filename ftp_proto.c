@@ -4,6 +4,7 @@
 #include "strutil.h"
 #include "ftp_codes.h"
 #include "command_map.h"
+#include "trans_ctrl.h"
 
 //子进程不断的从FTP客户端接收FTP指令，并给与回应
 void handle_proto(Session_t *sess)
@@ -14,6 +15,10 @@ void handle_proto(Session_t *sess)
     {
         session_reset_command(sess); //清空状态
 
+        //开始计时
+        start_signal_alarm_ctrl_fd();
+
+        //接受命令
         int ret = readline(sess->peer_fd, sess->command, MAX_COMMAND);
         if(ret == -1)
         {
