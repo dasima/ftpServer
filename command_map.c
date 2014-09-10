@@ -6,6 +6,8 @@
 #include "configure.h"
 #include "trans_data.h"
 #include "priv_sock.h"
+#include "strutil.h"
+#include "trans_ctrl.h"
 
 
 typedef struct ftpcmd
@@ -423,6 +425,19 @@ void do_rnto(Session_t *sess)
 void do_site(Session_t *sess)
 {
 
+    char cmd[1024] = {0};
+    char args[1024] = {0};
+    str_split(sess->args, cmd, args, ' ');
+    str_upper(cmd);
+    
+    if(strcmp("CHMOD", cmd))
+        do_site_chmod(sess, args);
+    else if(strcmp("UMASK", cmd))
+        do_site_umask(sess, args);
+    else if(strcmp("HELP", cmd))
+        do_site_help(sess);
+    else
+        ftp_reply(sess, FTP_BADCMD, "Unknown SITE command.");
 }
 
 void do_syst(Session_t *sess)
@@ -474,13 +489,13 @@ void do_size(Session_t *sess)
 void do_stat(Session_t *sess)
 {
     ftp_lreply(sess, FTP_STATOK, "FTP server status:");
-   
+    
     char text[1024] = {0};
     struct in_addr in;
     in.s_addr = sess->ip;
     snprintf(text, sizeof text, " Connected to %s\r\n", inet_ntoa(in));
     writen(sess->peer_fd, text, strlen(text));
-   
+    
     snprintf(text, sizeof text, " Logged in as %s\r\n", sess->username);
     writen(sess->peer_fd, text, strlen(text));
     ftp_reply(sess, FTP_STATOK, "End of status");
