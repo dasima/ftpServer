@@ -1,3 +1,0 @@
-#mini版ftp服务器
-
-test_ .c : 模块测试函数 <br />&nbsp;#1. 搭框架<br />&nbsp;main.c: 主函数<br />&nbsp;common.h: 存放公共头文件 <br />&nbsp;sysutil.* : 存放服务器系统相关函数<br />&nbsp;strutil.* : 字符串工具封装 <br />ftp_nobody.* : 父进程相关函数 <br /><div>ftp_proto.* : 子进程相关函数<br />session.* : 会话（核心）模块</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />#2.<br />ftp_server.conf : 服务器配置文件<br />configure.* : 参数配置模块<br />parse_conf.* : 解析配置文件模块 <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />#3.<br />ftp_codes.h : FTP应答相关的宏定义<br />command_map.* : FTP命令映射实现<br />
