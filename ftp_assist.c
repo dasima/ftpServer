@@ -21,6 +21,7 @@ static unsigned int add_ip_to_hash(uint32_t ip);
 
 void check_permission()
 {
+    //root 的uid为0
     if(getuid())
     {
         fprintf(stderr, "FtpServer must be started by root\n");
@@ -30,6 +31,7 @@ void check_permission()
 
 void setup_signal_chld()
 {
+    //signal第二个参数是handler，则signal阻塞，执行handler函数
     if(signal(SIGCHLD, handle_sigchld) == SIG_ERR)
         ERR_EXIT("signal");
 }
@@ -76,6 +78,8 @@ void limit_num_clients(Session_t *sess)
 static void handle_sigchld(int sig)
 {
     pid_t pid;
+    //waitpid挂起当前进程的执行，直到孩子状态发生改变
+    //孩子状态发生变化，伴随着孩子进程相关资源的释放，这可以解决僵尸进程
     while((pid = waitpid(-1, NULL, WNOHANG)) > 0)
     {
         --num_of_clients;

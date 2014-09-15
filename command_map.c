@@ -10,7 +10,7 @@
 #include "trans_ctrl.h"
 
 
-typedef struct ftpcmd
+typedef struct Ftpcmd
 {
     const char *cmd; //FTP指令
     void (*cmd_handler)(Session_t *sess);//该指令所对应的执行函数

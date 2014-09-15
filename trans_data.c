@@ -93,7 +93,8 @@ void download_file(Session_t *sess)
     const int kSize = 65536;
     while(nleft > 0)
     {
-        block_size = (nleft > kSize) ? kSize : nleft;
+        block_size = (nleft > kSize) ? kSize : nleft;//读取字节数
+        //sendfile发生在内核，更加高效
         int nwrite = sendfile(sess->data_fd, fd, NULL, block_size);
 
         if(sess->is_receive_abor == 1)

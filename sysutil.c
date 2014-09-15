@@ -106,6 +106,7 @@ static int lock_file(int fd, int type)
 int tcp_client(unsigned int port)
 {
     int sockfd;
+    //设置端口复用
     if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
         ERR_EXIT("socket");
 

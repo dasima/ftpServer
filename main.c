@@ -7,11 +7,13 @@
 
 int main(int argc, const char *argv[])
 {
+    //使用root权限运行
     check_permission();
 
     //处理僵尸进程
     setup_signal_chld();
 
+    //解析配置文件
     parseconf_load_file("ftpserver.conf");
     print_conf();
 
@@ -27,6 +29,8 @@ int main(int argc, const char *argv[])
 
     while(1)
     {
+        //每当用户连接上，就fork一个子进程
+       
         struct sockaddr_in addr;
         int peerfd = accept_timeout(listenfd, &addr, tunable_accept_timeout);
         if(peerfd == -1 && errno == ETIMEDOUT)
