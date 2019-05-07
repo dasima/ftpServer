@@ -19,13 +19,16 @@ void handle_nobody(Session_t *sess)
     char cmd;
     while(1)
     {
+        /* 接收子进程发送的命令 */
         cmd = priv_sock_recv_cmd(sess->nobody_fd);
         switch (cmd)
         {
             case PRIV_SOCK_GET_DATA_SOCK:
+                //获取数据套接字
                 privop_pasv_get_data_sock(sess);
                 break;
             case PRIV_SOCK_PASV_ACTIVE:
+                //判断pasv模式是否开启
                 privop_pasv_active(sess);
                 break;
             case PRIV_SOCK_PASV_LISTEN:

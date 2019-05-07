@@ -4,9 +4,13 @@
 #include "trans_ctrl.h"
 
 
+/*
+ * 创建 nobody 进程和服务进程间的通信管道
+ */
 void priv_sock_init(Session_t *sess)
 {
     int fds[2];
+    /* 创建一对套接字用于进程间通信 (IPC) */
     if(socketpair(PF_UNIX, SOCK_STREAM, 0, fds) == -1)
         ERR_EXIT("socketpair");
 
@@ -14,6 +18,9 @@ void priv_sock_init(Session_t *sess)
     sess->proto_fd = fds[1];
 }
 
+/*
+ * 关闭 nobody 进程和服务进程间的通信套接字对
+ */
 void priv_sock_close(Session_t *sess)
 {
     if(sess->nobody_fd != -1)
@@ -28,6 +35,10 @@ void priv_sock_close(Session_t *sess)
         sess->proto_fd = -1;
     }
 }
+
+/*
+ * 关闭客户端连接 fd 和服务连接
+ */
 void priv_sock_set_nobody_context(Session_t *sess)
 {
     close(sess->peer_fd); //关闭控制连接

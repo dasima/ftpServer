@@ -38,14 +38,19 @@ int main(int argc, const char *argv[])
         if(lstat(filename, &sbuf) == -1)
             ERR_EXIT("lstat");
 
+        /* 文件的权限 */
         strcpy(buf, statbuf_get_perms(&sbuf));
         strcat(buf, " ");
+        /* 用户信息 */
         strcat(buf, statbuf_get_user_info(&sbuf));
         strcat(buf, " ");
+        /* 文件大小 */
         strcat(buf, statbuf_get_size(&sbuf));
         strcat(buf, " ");
+        /* 最新更新日期 */
         strcat(buf, statbuf_get_date(&sbuf));
         strcat(buf, " ");
+        /* 文件名 */
         strcat(buf, statbuf_get_filename(&sbuf, filename));
 
         printf("%s\n", buf);

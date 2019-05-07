@@ -17,6 +17,7 @@ typedef struct Ftpcmd
 } ftpcmd_t;
 
 static ftpcmd_t ctrl_cmds[] = {
+
     /* 访问控制命令 */
     {"USER", do_user },
     {"PASS", do_pass },
@@ -28,6 +29,7 @@ static ftpcmd_t ctrl_cmds[] = {
     {"ACCT", NULL },
     {"SMNT", NULL },
     {"REIN", NULL },
+
     /* 传输参数命令 */
     {"PORT", do_port },
     {"PASV", do_pasv },
@@ -71,10 +73,12 @@ void do_command_map(Session_t *sess)
     int size = sizeof(ctrl_cmds) / sizeof(ctrl_cmds[0]); //数组大小
     for (i=0; i<size; ++i)
     {
+        /* 匹配当前命令的值 */
         if (strcmp(ctrl_cmds[i].cmd, sess->com) == 0)
         {
             if (ctrl_cmds[i].cmd_handler != NULL)
             {
+                /* 执行命令对应的 handler 函数 */
                 ctrl_cmds[i].cmd_handler(sess);
             }
             else
@@ -94,6 +98,9 @@ void do_command_map(Session_t *sess)
     }
 }
 
+/*
+ * 回复 session 信息
+ */
 void ftp_reply(Session_t *sess, int status, const char *text)
 {
     char tmp[1024] = { 0 };
@@ -111,6 +118,7 @@ void ftp_lreply(Session_t *sess, int status, const char *text)
 void do_user(Session_t *sess)
 {
     struct passwd *pw;
+    /* 获取用户登录的相关信息，返回用户ID，用户登录目录等信息 */
     if((pw = getpwnam(sess->args)) == NULL)
     {
         ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -124,7 +132,20 @@ void do_user(Session_t *sess)
 void do_pass(Session_t *sess)
 {
     //struct passwd *getpwuid(uid_t uid)
+    // /* The passwd structure.      */
+    // struct passwd
+    // {
+    //     char *pw_name;   /* 用户名*/
+    //     char *pw_passwd; /* 密码.*/
+    //     __uid_t pw_uid;  /* 用户ID.*/
+    //     __gid_t pw_gid;  /*组ID.*/
+    //     char *pw_gecos;  /*真实名*/
+    //     char *pw_dir;    /* 主目录.*/
+    //     char *pw_shell;  /*使用的shell*/
+    // };
+
     struct passwd *pw;
+    /* 通过用户 ID 查找用户的密码数据 */
     if((pw = getpwuid(sess->user_uid)) == NULL)
     {
         ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -133,6 +154,7 @@ void do_pass(Session_t *sess)
 
     //struct spwd *getspnam(const char *name);
     struct spwd *spw;
+    /* linux函数库中访问shadow的口令 */
     if((spw = getspnam(pw->pw_name)) == NULL)
     {
         ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -149,6 +171,7 @@ void do_pass(Session_t *sess)
 
     if(setegid(pw->pw_gid) == -1)
         ERR_EXIT("setegid");
+    /* 重新设置执行目前进程的有效用户识别码 */
     if(seteuid(pw->pw_uid) == -1)
         ERR_EXIT("seteuid");
 
