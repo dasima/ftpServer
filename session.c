@@ -5,6 +5,7 @@
 #include "priv_sock.h"
 #include "configure.h"
 
+//初始化session
 void session_init(Session_t *sess)
 {
     memset(sess->command, 0, sizeof (sess->command));
@@ -40,6 +41,7 @@ void session_init(Session_t *sess)
     sess->curr_ip_clients = 0;
 }
 
+//将三个字符数组置位
 void session_reset_command(Session_t *sess)
 {
     memset(sess->command, 0, sizeof (sess->command));
@@ -47,20 +49,26 @@ void session_reset_command(Session_t *sess)
     memset(sess->args, 0, sizeof (sess->args));
 }
 
+//处理会话，这里主要是创建nobody与ftp子进程
 void session_begin(Session_t *sess)
 {
+    /*  nobody 进程和服务进程初始化 */
     priv_sock_init(sess);
 
     pid_t pid;
+    /* 创建服务进程 */
     if((pid = fork()) == -1)
         ERR_EXIT("fork");
     else if(pid == 0)
     {
+        /* 服务进程 */
         priv_sock_set_proto_context(sess);
+        /* 接收命令并处理 */
         handle_proto(sess);
     }
     else
     {
+        //  nobody 进程
         priv_sock_set_nobody_context(sess);
         handle_nobody(sess);
     }

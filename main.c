@@ -17,7 +17,7 @@ int main(int argc, const char *argv[])
     parseconf_load_file("ftpserver.conf");
     print_conf();
 
-    init_hash();  
+    init_hash();
 
     //创建一个监听fd
     int listenfd = tcp_server(tunable_listen_address, tunable_listen_port);
@@ -30,7 +30,7 @@ int main(int argc, const char *argv[])
     while(1)
     {
         //每当用户连接上，就fork一个子进程
-       
+
         struct sockaddr_in addr;
         int peerfd = accept_timeout(listenfd, &addr, tunable_accept_timeout);
         if(peerfd == -1 && errno == ETIMEDOUT)
@@ -47,6 +47,8 @@ int main(int argc, const char *argv[])
             ERR_EXIT("fork");
         else if(pid == 0)
         {
+            // 子进程
+            // 关闭父进程中的监听端口
             close(listenfd);
 
             sess.peer_fd = peerfd;
@@ -57,8 +59,10 @@ int main(int argc, const char *argv[])
         }
         else
         {
+            // 父进程
             //pid_to_ip
             add_pid_ip_to_hash(pid, ip);
+            // 关闭数据连接 socket
             close(peerfd);
         }
     }

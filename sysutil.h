@@ -10,6 +10,7 @@ int get_curr_time_sec();
 int get_curr_time_usec();
 int nano_sleep(double t);
 
+/* 对文件进行加锁 */
 int lock_file_read(int fd);
 int lock_file_write(int fd);
 int unlock_file(int fd);
@@ -26,14 +27,18 @@ void activate_nonblock(int fd);
 void deactivate_nonblock(int fd);
 
 //超时IO函数
+/* 带超时检测从数据读取 */
 int read_timeout(int fd, unsigned int wait_seconds);
 int write_timeout(int fd, unsigned int wait_seconds);
 int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds);
 int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds);
 
 //处理TCP粘包问题
+/* 读取 n 个字节 */
 ssize_t readn(int fd, void *buf, size_t count);
+/* 写入 n 个字节 */
 ssize_t writen(int fd, const void *buf, size_t n);
+/* 读取一行数据 */
 ssize_t readline(int sockfd, void *buf, size_t maxline);
 
 //发送与接收文件描述符

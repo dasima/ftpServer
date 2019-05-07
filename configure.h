@@ -4,6 +4,8 @@
 extern int tunable_pasv_enable;
 extern int tunable_port_enable;
 extern unsigned int tunable_listen_port;
+extern unsigned int tunable_pasv_port_min;
+extern unsigned int tunable_pasv_port_max;
 extern unsigned int tunable_max_clients;
 extern unsigned int tunable_max_per_ip;
 extern unsigned int tunable_accept_timeout;
