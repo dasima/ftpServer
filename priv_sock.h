@@ -4,9 +4,13 @@
 #include "session.h"
 
 // FTP服务进程向nobody进程请求的命令
+/* 获取数据套接字 */
 #define PRIV_SOCK_GET_DATA_SOCK 1
+/* 判断pasv模式是否开启 */
 #define PRIV_SOCK_PASV_ACTIVE 2
+/* 获取监听fd */
 #define PRIV_SOCK_PASV_LISTEN 3
+/* accept一个新的连接 */
 #define PRIV_SOCK_PASV_ACCEPT 4
 
 // nobody进程对FTP服务进程的应答

@@ -136,7 +136,7 @@ void download_file(Session_t *sess)
 
     //先恢复控制连接的信号
     setup_signal_alarm_ctrl_fd();
-    sess->is_translating_data = 0;    
+    sess->is_translating_data = 0;
 }
 
 void upload_file(Session_t *sess, int is_appe)
@@ -278,6 +278,7 @@ void trans_list(Session_t *sess, int list)
     if(list == 1)
         trans_list_common(sess, 1);
     else
+        /* 简单的目录传输 */
         trans_list_common(sess, 0);
     close(sess->data_fd); //传输结束记得关闭
     sess->data_fd = -1;
@@ -289,6 +290,7 @@ void trans_list(Session_t *sess, int list)
 //返回值表示成功与否
 static int get_trans_data_fd(Session_t *sess)
 {
+    /* 检测是否收到PORT或者PASV命令 */
     int is_port = is_port_active(sess);
     int is_pasv = is_pasv_active(sess);
 
@@ -314,7 +316,7 @@ static int get_trans_data_fd(Session_t *sess)
 
     if(is_pasv)
     {
-        get_pasv_data_fd(sess);    
+        get_pasv_data_fd(sess);
     }
 
     //这里获取data fd成功
@@ -326,6 +328,7 @@ static int get_trans_data_fd(Session_t *sess)
     return 1;
 }
 
+/* 获取文件的权限 */
 static const char *statbuf_get_perms(struct stat *sbuf)
 {
     //这里使用static返回perms
@@ -515,19 +518,24 @@ static void trans_list_common(Session_t *sess, int list)
 
         char buf[1024] = {0};
         struct stat sbuf;
-        if(lstat(filename, &sbuf) == -1)
+        if (statbuf_get_perms(filename, &sbuf) == -1)
             ERR_EXIT("lstat");
 
         if(list == 1) // LIST
         {
+            /* 文件的权限 */
             strcpy(buf, statbuf_get_perms(&sbuf));
             strcat(buf, " ");
+            /* 用户信息 */
             strcat(buf, statbuf_get_user_info(&sbuf));
             strcat(buf, " ");
+            /* 文件大小 */
             strcat(buf, statbuf_get_size(&sbuf));
             strcat(buf, " ");
+            /* 最新更新日期 */
             strcat(buf, statbuf_get_date(&sbuf));
             strcat(buf, " ");
+            /* 文件名 */
             strcat(buf, statbuf_get_filename(&sbuf, filename));
         }
         else //NLST

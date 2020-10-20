@@ -30,9 +30,13 @@ void handle_proto(Session_t *sess)
         {
             exit(EXIT_SUCCESS);
         }
+
+        /* 去除行尾 回车换行符 */
         str_trim_crlf(sess->command);
+        /* 将命令切割为两部分 */
         str_split(sess->command, sess->com, sess->args, ' ');
-        str_upper(sess->com);		
+        /* 字符串转换为大写 */
+        str_upper(sess->com);
         printf("COMMD=[%s], ARGS=[%s]\n", sess->com, sess->args);
 
         do_command_map(sess); //执行命令映射

@@ -77,6 +77,9 @@ int unlock_file(int fd)
     return fcntl(fd, F_SETLK, &lock);
 }
 
+/*
+ * 对文件设置锁，防止多进程并发产生冲突操作
+ */
 static int lock_file(int fd, int type)
 {
     struct flock lock;
@@ -90,6 +93,7 @@ static int lock_file(int fd, int type)
     int ret;
     do
     {
+        // 设置锁，阻塞
         ret = fcntl(fd, F_SETLKW, &lock);
     }
     while(ret == -1 && errno == EINTR)
@@ -100,19 +104,20 @@ static int lock_file(int fd, int type)
 
 /*
  *函数功能：创建客户套接字
- *参数port: 端口号 
- *函数返回值：返回客户端套接字 
+ *参数port: 端口号
+ *函数返回值：返回客户端套接字
  */
 int tcp_client(unsigned int port)
 {
     int sockfd;
     //设置端口复用
-    if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         ERR_EXIT("socket");
 
     if(port > 0)
     {
         int on = 1;
+        //设置端口复用
         if((setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&on, sizeof(on))) == -1)
             ERR_EXIT("setsockopt");
 
@@ -141,7 +146,7 @@ int tcp_server(const char *host, unsigned short port)
 {
     //建立套接字
     int listenfd;
-    if((listenfd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    if((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         ERR_EXIT("tcp_server");
     struct sockaddr_in seraddr;
     memset(&seraddr, 0, sizeof(seraddr));
@@ -196,7 +201,7 @@ int tcp_server(const char *host, unsigned short port)
  */
 int get_local_ip(char *ip)
 {
-    int sockfd; 
+    int sockfd;
     if((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
     {
         ERR_EXIT("socket");
@@ -297,7 +302,9 @@ int write_timeout(int fd, unsigned int wait_seconds)
     if(wait_seconds > 0)
     {
         fd_set write_fd;
+        // 初始化套接字队列
         FD_ZERO(&write_fd);
+        // 将套接字 fd 插入到套接字队列 write_fd 中
         FD_SET(fd, &write_fd);
 
         struct timeval timeout;
@@ -331,6 +338,7 @@ int accept_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
 {
     int ret;
     socklen_t addrlen = sizeof(struct sockaddr_in);
+    /* 超时检测 */
     if(wait_seconds > 0)
     {
         fd_set accept_fd;
@@ -423,7 +431,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, unsigned int wait_seconds)
             {
                 ret = 0;
             }
-            else 
+            else
             {
                 errno = err;
                 ret = -1;
@@ -570,7 +578,7 @@ ssize_t readline(int sockfd, void *buf, size_t maxsize)
                 *ptr = 0;
                 return total;   //返回此行的>    长度 '\n'包含在其中
             }
-        } 
+        }
         //如果没有发现\n,这些数据应全部接收
         ret = readn(sockfd, ptr, nread);
         if(ret != nread)
@@ -661,6 +669,6 @@ int recv_fd(const int sockfd)
     if(recvfd == -1)
         ERR_EXIT("no [assed fd");
 
-    return recvfd;    
+    return recvfd;
 }
 
